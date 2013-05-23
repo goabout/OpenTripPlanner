@@ -49,26 +49,36 @@ otp.modules.planner.PlannerModule =
     date                    : null,
     arriveBy                : false,
     mode                    : "TRANSIT,WALK",
-    maxWalkDistance         : 804.672, // 1/2 mi.
+    maxWalkDistance         : null,
     preferredRoutes         : null,
     bannedTrips             : null,
     optimize                : null,
     triangleTimeFactor      : 0.333,
     triangleSlopeFactor     : 0.333,
     triangleSafetyFactor    : 0.334,
-    
+
+    // metric/ imperial
+    metricDefaultMaxWalkDistance: 750, // meters
+    imperialDefaultMaxWalkDistance: 804.672, // 0.5 mile
+
     startTimePadding        : 0,
-    
+
     // copy of query param set from last /plan request
     lastQueryParams : null,
-    
+
     icons       : null,
 
     initialize : function(webapp) {
         otp.modules.Module.prototype.initialize.apply(this, arguments);
         this.icons = new otp.modules.planner.IconFactory();
         
-        this.planTripFunction = this.planTrip;    
+        if (otp.config.metric) {
+            this.maxWalkDistance = this.metricDefaultMaxWalkDistance;
+        } else {
+            this.maxWalkDistance = this.imperialDefaultMaxWalkDistance;
+        }
+
+        this.planTripFunction = this.planTrip;
     },
     
     activate : function() {
