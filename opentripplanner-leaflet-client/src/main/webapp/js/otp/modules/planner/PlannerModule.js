@@ -96,6 +96,8 @@ otp.modules.planner.PlannerModule =
         this.addLayer("Paths", this.pathLayer);
         this.addLayer("Path Markers", this.pathMarkerLayer);
         
+        this.webapp.transitIndex.loadRoutes();
+        
         this.activated = true;
         
         // set up primary widgets (TODO: move to bike planner module)
