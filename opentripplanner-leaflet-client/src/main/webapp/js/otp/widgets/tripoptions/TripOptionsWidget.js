@@ -466,7 +466,7 @@ otp.widgets.tripoptions.MaxWalkSelector =
 
         // ui
         var inputField = this.$().find('#'+this.id+'-value');
-        var inputFieldVal = otp.config.metric ? meters : meters/1609.34; // input field is in miles
+        var inputFieldVal = otp.config.metric ? meters : Math.round(meters/160.934)/10; // input field is in miles
         var presets = this.$().find('#'+this.id+'-presets');
         inputField.val(inputFieldVal);
         presets.val(meters); // try to select an option, if it's not in there, it will fail silently
