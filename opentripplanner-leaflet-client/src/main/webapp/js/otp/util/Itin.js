@@ -110,7 +110,7 @@ otp.util.Itin = {
                             step.streetName + (asHtml ? "</b>" : "");
             }
         }
-        return text; // + ' and proceed <b>'+otp.util.Itin.distanceString(step.distance)+'</b>';
+        return text;
     },
     
     getRouteDisplayString : function(routeData) {
@@ -118,4 +118,8 @@ otp.util.Itin = {
         str += routeData.routeLongName;
         return str;
     },
+    
+    getRouteShortReference : function(routeData) {
+        return routeData.routeShortName || routeData.id.id;
+    },    
 }
