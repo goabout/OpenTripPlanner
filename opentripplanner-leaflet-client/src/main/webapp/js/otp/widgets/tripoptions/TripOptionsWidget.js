@@ -491,10 +491,12 @@ otp.widgets.tripoptions.MaxDistanceSelector =
     restorePlan : function(data) {
         if(!data.queryParams.maxWalkDistance) return;
 
-        var meters = data.queryParams.maxWalkDistance;
+        var meters = parseFloat(data.queryParams.maxWalkDistance);
+        if (isNaN(meters)) { return; }
+
         if (!otp.config.metric) { meters = meters / 1609.34; } // input field was in miles
 
-        $('#'+this.id+'-value').val((meters).toFixed(2));  
+        $('#'+this.id+'-value').val(meters.toFixed(2));  
         this.tripWidget.module.maxWalkDistance = data.queryParams.maxWalkDistance;
     },
 
