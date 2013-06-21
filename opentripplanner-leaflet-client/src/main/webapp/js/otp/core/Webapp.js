@@ -195,8 +195,9 @@ otp.core.Webapp = otp.Class({
             for(var i=0; i<otp.config.modules.length; i++) {
                 var modConfig = otp.config.modules[i];
                 var modClass = this.stringToFunction(modConfig.className);
-                var module = new modClass(this);
-                if(modConfig.id) module.id = modConfig.id;
+                var id =  modConfig.id || 'module'+i;
+                var options = modConfig.options || {}; 
+                var module = new modClass(this, id, options);
                 if(modConfig.defaultBaseLayer) module.defaultBaseLayer = modConfig.defaultBaseLayer;
                 
                 var isDefault = false;
@@ -231,6 +232,7 @@ otp.core.Webapp = otp.Class({
                        
         }
         
+        
         // add the spinner
         
         $(Mustache.render(otp.templates.img, {
@@ -255,6 +257,7 @@ otp.core.Webapp = otp.Class({
     },
     
     setActiveModule : function(module) {
+        var this_ = this;
         //console.log("set active module: "+module.moduleName);
         if(this.activeModule != null) {
             this.activeModule.deselected();
@@ -272,17 +275,39 @@ otp.core.Webapp = otp.Class({
                 module.widgets[i].show();
             }
         }        
-        if(!module.activated) {
-            module.activate();
-            if(_.has(this.urlParams, 'module') && this.urlParams.module == module.id) module.restore();
+        
+        if(!module.activated) {        
+            if(module.templateFile) {
+                $.get(otp.config.resourcePath + 'js/' + module.templateFile)
+                .success(function(data) {
+                    $('<div style="display:none;"></div>').appendTo($("body")).html(data);
+                    ich.grabTemplates();                   
+                    this_.activateModule(module);
+                });
+            }        
+            else {
+                this.activateModule(module);
+            }         
         }
-        module.selected();
-        
-        this.map.activeModuleChanged(this.activeModule, module);
-        
-        this.activeModule = module;
-    },   
+        else {
+            this.moduleSelected(module);
+        }
+
+    },
     
+    activateModule : function(module) {
+        module.activate();
+        if(_.has(this.urlParams, 'module') && this.urlParams.module == module.id) module.restore();
+        this.moduleSelected(module);
+        module.activated = true;
+    },
+    
+    moduleSelected : function(module) {
+        module.selected();
+        this.map.activeModuleChanged(this.activeModule, module);    
+        this.activeModule = module;
+    },
+          
           
     hideSplash : function() {
     	$("#splash-text").hide();
