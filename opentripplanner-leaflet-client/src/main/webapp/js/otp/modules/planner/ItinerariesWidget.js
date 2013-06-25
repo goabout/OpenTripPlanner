@@ -40,7 +40,9 @@ otp.widgets.ItinerariesWidget =
         otp.widgets.Widget.prototype.initialize.call(this, id, module, {
             title : "Itineraries",
             cssClass : 'otp-itinsWidget',
-            resizable : true
+            resizable : true,
+            closeable : true,
+            persistOnClose : true,
         });
         //this.$().addClass('otp-itinsWidget');
         //this.$().resizable();
@@ -89,12 +91,10 @@ otp.widgets.ItinerariesWidget =
         }            
         
         this.itineraries = itineraries;
-        //this.header.html(this.itineraries.length+" Itineraries Returned:");
-        this.setTitle(this.itineraries.length+" Itineraries Returned:");
-        
-        if(this.itinsAccord !== null) this.itinsAccord.remove();
-        if(this.footer !== null) this.footer.remove();
 
+        this.clear();
+        this.setTitle(this.itineraries.length+" Itineraries Returned");
+        
         var html = "<div id='"+divId+"' class='otp-itinsAccord'></div>";
         this.itinsAccord = $(html).appendTo(this.$());
 
@@ -152,6 +152,11 @@ otp.widgets.ItinerariesWidget =
 
         this.$().draggable({ cancel: "#"+divId });
         
+    },
+    
+    clear : function() {
+        if(this.itinsAccord !== null) this.itinsAccord.remove();
+        if(this.footer !== null) this.footer.remove();
     },
     
     renderButtonRow : function() {
@@ -418,12 +423,25 @@ otp.widgets.ItinerariesWidget =
         .append('<div class="otp-itinTripSummaryHeader">Trip Summary</div>')
         .append('<div class="otp-itinTripSummaryLabel">Travel</div><div class="otp-itinTripSummaryText">'+itin.getStartTimeStr()+'</div>')
         .append('<div class="otp-itinTripSummaryLabel">Time</div><div class="otp-itinTripSummaryText">'+itin.getDurationStr()+'</div>');
+        
+        var walkDistance = itin.getModeDistance("WALK");
+        if(walkDistance > 0) {
+            tripSummary.append('<div class="otp-itinTripSummaryLabel">Total Walk</div><div class="otp-itinTripSummaryText">' + 
+                otp.util.Itin.distanceString(walkDistance) + '</div>')
+        }
+
+        var bikeDistance = itin.getModeDistance("BICYCLE");
+        if(bikeDistance > 0) {
+            tripSummary.append('<div class="otp-itinTripSummaryLabel">Total Bike</div><div class="otp-itinTripSummaryText">' + 
+                otp.util.Itin.distanceString(bikeDistance) + '</div>')
+        }
+        
         if(itin.hasTransit) {
             tripSummary.append('<div class="otp-itinTripSummaryLabel">Transfers</div><div class="otp-itinTripSummaryText">'+itin.itinData.transfers+'</div>')
-            if(itin.itinData.walkDistance > 0) {
+            /*if(itin.itinData.walkDistance > 0) {
                 tripSummary.append('<div class="otp-itinTripSummaryLabel">Total Walk</div><div class="otp-itinTripSummaryText">' + 
                     otp.util.Itin.distanceString(itin.itinData.walkDistance) + '</div>')
-            }
+            }*/
             tripSummary.append('<div class="otp-itinTripSummaryLabel">Fare</div><div class="otp-itinTripSummaryText">'+itin.getFareStr()+'</div>');
         }
         
