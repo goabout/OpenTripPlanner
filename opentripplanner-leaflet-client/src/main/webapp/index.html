@@ -10,8 +10,12 @@
 
 <!--  Mobile Viewport Fix -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   
-  
+<!-- Google WebFonts -->
+<link href='http://fonts.googleapis.com/css?family=Dancing+Script:700' rel='stylesheet' type='text/css'>
+
+
 <!-- jquery -->
 <script src="js/lib/jquery/jquery-1.9.1.js"></script>
 
@@ -45,6 +49,10 @@
 <!-- Mustache/ICanHaz -->
 <script src="js/lib/mustache.js"></script>
 <script src="js/lib/ICanHaz.js"></script>
+
+<!-- jsPDF -->
+<script src="js/lib/jspdf.min.js"></script>
+
 
 <!-- otp-specific imports -->
 <script src="js/otp/otp.js?v=1"></script>
@@ -127,9 +135,13 @@
 <script src="js/otp/widgets/tripoptions/TripOptionsWidget.js?v=1"></script>
 <script src="js/otp/widgets/tripoptions/BikeTrianglePanel.js?v=1"></script>
 
+<script src="js/otp/widgets/transit/RouteBasedWidget.js?v=1"></script>
 <script src="js/otp/widgets/transit/StopViewerWidget.js?v=1"></script>
 <script src="js/otp/widgets/transit/TripViewerWidget.js?v=1"></script>
 <link rel="stylesheet" href="js/otp/widgets/transit/widgets-transit-style.css?v=1" />
+
+<script src="js/otp/layers/StopsLayer.js?v=1"></script>
+
 
 
 <link rel="stylesheet" href="style.css?v=1" />
@@ -146,9 +158,11 @@
 
 
 $(document).ready(function() {
-    var templateUrls = new Array(
-        'js/otp/widgets/tripoptions/tripoptions-templates.html'
-    );
+    var templateUrls = [ //new Array(
+        'js/otp/layers/layers-templates.html',
+        'js/otp/widgets/tripoptions/tripoptions-templates.html',
+        'js/otp/widgets/transit/widgets-transit-templates.html',
+    ];
 
     var loadedTemplates = 0;
 

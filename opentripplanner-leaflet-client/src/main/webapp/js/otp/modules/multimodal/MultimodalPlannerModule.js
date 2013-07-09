@@ -36,15 +36,21 @@ otp.modules.multimodal.MultimodalPlannerModule =
         if(this.activated) return;
         otp.modules.planner.PlannerModule.prototype.activate.apply(this);
 
-        // setup options widget
+        // set up options widget
         
-        this.optionsWidget = new otp.widgets.tripoptions.TripOptionsWidget(
-            'otp-'+this.id+'-optionsWidget', this, {
+        var optionsWidgetConfig = {
                 title : 'Trip Options',
                 closeable : true,
                 persistOnClose: true,
-            }
-        );
+        };
+        
+        if(typeof this.tripOptionsWidgetCssClass !== 'undefined') {
+            console.log("set tripOptionsWidgetCssClass: " + this.tripOptionsWidgetCssClass); 
+            optionsWidgetConfig['cssClass'] = this.tripOptionsWidgetCssClass;
+        }
+        
+        this.optionsWidget = new otp.widgets.tripoptions.TripOptionsWidget(
+            'otp-'+this.id+'-optionsWidget', this, optionsWidgetConfig);
 
         if(this.webapp.geocoders && this.webapp.geocoders.length > 0) {
             this.optionsWidget.addControl("locations", new otp.widgets.tripoptions.LocationsSelector(this.optionsWidget, this.webapp.geocoders), true);
@@ -70,6 +76,20 @@ otp.modules.multimodal.MultimodalPlannerModule =
         this.optionsWidget.addControl("submit", new otp.widgets.tripoptions.Submit(this.optionsWidget));
         
         this.optionsWidget.applyQueryParams(this.defaultQueryParams);
+        
+        // add stops layer
+        this.stopsLayer = new otp.layers.StopsLayer(this);
+    },
+    
+    routesLoaded : function() {
+        // set trip / stop viewer widgets
+        
+        this.tripViewerWidget = new otp.widgets.transit.TripViewerWidget("otp-"+this.id+"-tripViewerWidget", this);
+        this.tripViewerWidget.center();
+        
+        this.stopViewerWidget = new otp.widgets.transit.StopViewerWidget("otp-"+this.id+"-stopViewerWidget", this);
+        this.stopViewerWidget.center();
+
     },
     
     getExtendedQueryParams : function() {
@@ -89,12 +109,17 @@ otp.modules.multimodal.MultimodalPlannerModule =
             this.itinWidget.updateItineraries(tripPlan.itineraries, tripPlan.queryParams);
         }
         
-        if(restoring) {
+        /*if(restoring) {
             this.optionsWidget.restorePlan(tripPlan);
-        }
+        }*/
         this.drawItinerary(tripPlan.itineraries[0]);
     },
-   
+    
+    restoreTrip : function(queryParams) {    
+        this.optionsWidget.applyQueryParams(queryParams);
+        otp.modules.planner.PlannerModule.prototype.restoreTrip.apply(this, arguments);
+    },
+       
     clearTrip : function() {
         otp.modules.planner.PlannerModule.prototype.clearTrip.apply(this);
         if(this.itinWidget !== null) {

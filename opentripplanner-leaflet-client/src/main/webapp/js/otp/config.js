@@ -10,7 +10,6 @@ otp.config = {
     /**
      * The OTP web service locations
      */
-
     hostname : "http://localhost:8080",
     //municoderHostname : "http://localhost:8080",
     //datastoreUrl : 'http://localhost:9000',

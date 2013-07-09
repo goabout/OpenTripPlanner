@@ -28,9 +28,11 @@ otp.widgets.tripoptions.TripOptionsWidget =
     initialize : function(id, module, options) {
     
         options = options || {};
-        if(!_.has(options, 'title')) _.extend(options, { title : 'Travel Options' });
-        _.extend(options, { cssClass : 'otp-defaultTripWidget' });
+        if(!_.has(options, 'title')) options['title'] = 'Travel Options';
+        if(!_.has(options, 'cssClass')) options['cssClass'] = 'otp-defaultTripWidget';
         otp.widgets.Widget.prototype.initialize.call(this, id, module, options);
+
+        this.mainDiv.addClass('otp-tripOptionsWidget');
         
         //this.planTripCallback = planTripCallback;
         this.module = module;
@@ -94,8 +96,13 @@ otp.widgets.tripoptions.TripOptionsWidget =
         this.restorePlan({ queryParams : queryParams });
     },
 
-    restoreDefaults : function() {
-        this.applyQueryParams(this.module.defaultQueryParams);
+    restoreDefaults : function(useCurrentTime) {
+        var params = _.clone(this.module.defaultQueryParams);
+        if(useCurrentTime) {
+            params['date'] = moment().format("MM-DD-YYYY");
+            params['time'] = moment().format("h:mma");
+        }
+        this.applyQueryParams(params);
     },
     
     newItinerary : function(itin) {
@@ -432,7 +439,7 @@ otp.widgets.tripoptions.ModeSelector =
 otp.widgets.tripoptions.MaxDistanceSelector = 
     otp.Class(otp.widgets.tripoptions.TripOptionsWidgetControl, {
     
-    id           : null,
+    id           :  null,
     presets      : null,
     distSuffix   : null,
 
