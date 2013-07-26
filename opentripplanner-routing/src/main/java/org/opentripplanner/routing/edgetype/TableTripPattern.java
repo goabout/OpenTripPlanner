@@ -90,11 +90,13 @@ public class TableTripPattern implements TripPattern, Serializable {
      */
     final ArrayList<Trip> trips = new ArrayList<Trip>();
 
-    /** 
-     * All trips in a pattern have the same stops, so this array of Stops applies to every trip in 
-     * every timetable in this pattern. 
+    /**
+     * An ordered list of related PatternHop. All trips in a pattern have the same stops and a
+     * PatternHop apply to all those trips, so this array apply to every trip in every timetable in
+     * this pattern. Please note that the array size is the number of stops minus 1. This also allow
+     * to access the ordered list of stops.
      */
-    /* package private */ Stop[] stops; 
+    private PatternHop[] patternHops;
 
     /** Holds stop-specific information such as wheelchair accessibility and pickup/dropoff roles. */
     @XmlElement int[] perStopFlags;
@@ -117,11 +119,10 @@ public class TableTripPattern implements TripPattern, Serializable {
     }
             
     private void setStopsFromStopPattern(ScheduledStopPattern stopPattern) {
-        this.stops = new Stop[stopPattern.stops.size()];
-        perStopFlags = new int[stops.length];
+        patternHops = new PatternHop[stopPattern.stops.size() - 1];
+        perStopFlags = new int[stopPattern.stops.size()];
         int i = 0;
         for (Stop stop : stopPattern.stops) {
-            this.stops[i] = stop;
             if (stop.getWheelchairBoarding() == 1) {
                 perStopFlags[i] |= FLAG_WHEELCHAIR_ACCESSIBLE;
             }
@@ -130,9 +131,37 @@ public class TableTripPattern implements TripPattern, Serializable {
             ++i;
         }
     }
+    
+    public Stop getStop(int stopIndex) {
+    	if (stopIndex == patternHops.length)
+    		return patternHops[stopIndex - 1].getEndStop();
+    	else
+    		return patternHops[stopIndex].getStartStop();
+    }
 
     public List<Stop> getStops() {
-        return Arrays.asList(stops);
+        /*
+         * Dynamically build the list from the PatternHop list. Not super efficient but this method
+         * is not called very often.
+         */
+        List<Stop> retval = new ArrayList<Stop>(patternHops.length + 1);
+        for (int i = 0; i <= patternHops.length; i++)
+            retval.add(getStop(i));
+        return retval;
+    }
+    
+    public List<PatternHop> getPatternHops() {
+    	return Arrays.asList(patternHops);
+    }
+
+    /* package private */
+    void setPatternHop(int stopIndex, PatternHop patternHop) {
+        patternHops[stopIndex] = patternHop;
+    }
+
+    @Override
+    public int getHopCount() {
+        return patternHops.length;
     }
 
     public Trip getTrip(int tripIndex) {
@@ -160,7 +189,7 @@ public class TableTripPattern implements TripPattern, Serializable {
 
     /** Returns the zone of a given stop */
     public String getZone(int stopIndex) {
-        return stops[stopIndex].getZoneId();
+        return getStop(stopIndex).getZoneId();
     }
 
     /** Returns an arbitrary trip that uses this pattern */
@@ -199,8 +228,8 @@ public class TableTripPattern implements TripPattern, Serializable {
      * @param boarding true means find next departure, false means find previous arrival 
      * @return a TripTimes object providing all the arrival and departure times on the best trip.
      */
-    public TripTimes getNextTrip(int stopIndex, int time, boolean haveBicycle, ServiceDay sd,
-            State state0, boolean boarding) {
+    public TripTimes getNextTrip(int stopIndex, int time, State state0, ServiceDay sd,
+            boolean haveBicycle, boolean boarding) {
         RoutingRequest options = state0.getOptions();
         Timetable timetable = scheduledTimetable;
         TimetableResolver snapshot = options.rctx.timetableSnapshot;
@@ -218,7 +247,7 @@ public class TableTripPattern implements TripPattern, Serializable {
             return null;
         }
         // so far so good, delegate to the timetable
-        return timetable.getNextTrip(stopIndex, time, haveBicycle, sd, state0, boarding);
+        return timetable.getNextTrip(stopIndex, time, state0, sd, haveBicycle, boarding);
     }
     
     public Iterator<Integer> getScheduledDepartureTimes(int stopIndex) {
