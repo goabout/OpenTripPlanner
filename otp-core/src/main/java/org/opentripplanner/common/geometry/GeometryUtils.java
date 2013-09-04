@@ -21,6 +21,7 @@ import com.vividsolutions.jts.geom.CoordinateSequenceFactory;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.linearref.LengthLocationMap;
 import com.vividsolutions.jts.linearref.LinearLocation;
 import com.vividsolutions.jts.linearref.LocationIndexedLine;
 
@@ -47,6 +48,7 @@ public class GeometryUtils {
      * Splits the input geometry into two LineStrings at the given point.
      */
     public static P2<LineString> splitGeometryAtPoint(Geometry geometry, Coordinate nearestPoint) {
+        // An index in JTS can actually refer to any point along the line. It is NOT an array index.
         LocationIndexedLine line = new LocationIndexedLine(geometry);
         LinearLocation l = line.indexOf(nearestPoint);
 
@@ -72,40 +74,14 @@ public class GeometryUtils {
         double totalDistance = total.getLength();
         double requestedDistance = totalDistance * fraction;
 
-        double fractionalIndex = binarySearchCoordinates(coordinates, requestedDistance);
-        int lowIndex = (int) Math.floor(fractionalIndex);
-        int highIndex = (int) Math.ceil(fractionalIndex);
+        // An index in JTS can actually refer to any point along the line. It is NOT an array index.
+        LocationIndexedLine line = new LocationIndexedLine(geometry);
+        LinearLocation l = LengthLocationMap.getLocation(geometry, requestedDistance);
 
-        if (lowIndex == highIndex) {
-            return splitGeometryAtPoint(geometry, coordinates[lowIndex]);
-        } else {
-            double lowFactor = highIndex - fractionalIndex;
-            double highFactor = fractionalIndex - lowIndex;
-            double x = coordinates[lowIndex].x * lowFactor + coordinates[highIndex].x * highFactor;
-            double y = coordinates[lowIndex].y * lowFactor + coordinates[highIndex].y * highFactor;
+        LineString beginning = (LineString) line.extractLine(line.getStartIndex(), l);
+        LineString ending = (LineString) line.extractLine(l, line.getEndIndex());
 
-            Coordinate splitCoordinate = new Coordinate(x, y);
-            Coordinate[] beginning = new Coordinate[lowIndex + 2];
-            Coordinate[] ending = new Coordinate[coordinates.length - lowIndex];
-
-            for (int i = 0; i <= lowIndex; i++) {
-                beginning[i] = coordinates[i];
-            }
-            beginning[lowIndex + 1] = splitCoordinate;
-
-            CoordinateSequence firstSequence = gf.getCoordinateSequenceFactory().create(beginning);
-            LineString firstLineString = new LineString(firstSequence, gf);
-
-            for (int i = coordinates.length - 1; i >= highIndex; i--) {
-                ending[i - lowIndex] = coordinates[i];
-            }
-            ending[0] = splitCoordinate;
-
-            CoordinateSequence secondSequence = gf.getCoordinateSequenceFactory().create(ending);
-            LineString secondLineString = new LineString(secondSequence, gf);
-
-            return new P2<LineString>(firstLineString, secondLineString);
-        }
+        return new P2<LineString>(beginning, ending);
     }
 
     /**
@@ -140,65 +116,4 @@ public class GeometryUtils {
             return 1.0;
         return r;
       }
-
-    /**
-     * Binary search method adapted from GNU Classpath Arrays.java (GPL).
-     * Search across an array of Coordinate objects, computing the length of the geometry described.
-     *
-     * @return the index at which the distance is as requested, or a value in between two indices if
-     * the match is not exact. In that case, the fractional part of the result will be proportional
-     * to the distance between the two coordinates and the desired distance.
-     */
-    public static double binarySearchCoordinates(
-            Coordinate[] coordinates, double requestedDistance) {
-        if (coordinates.length < 2) return 0;
-
-        int low = 0;
-        int high = coordinates.length - 1;
-        int middle;
-
-        if (requestedDistance <= computePartialLength(coordinates, low)) return low;
-        if (requestedDistance >= computePartialLength(coordinates, high)) return high;
-
-        while (low < high - 1) {
-            middle = (low + high) >>> 1;    // Shift right logical so the full range of int is used.
-            double middleDistance = computePartialLength(coordinates, middle);
-
-            if (requestedDistance > middleDistance) {
-                low = middle;
-            } else if (requestedDistance < middleDistance) {
-                high = middle;
-            } else {
-                return middle;
-            }
-        }
-
-        double lowDistance = computePartialLength(coordinates, low);
-        double highDistance = computePartialLength(coordinates, high);
-        double differenceHighLow = highDistance - lowDistance;
-        double differenceRequestedLow = requestedDistance - lowDistance;
-
-        return low + (differenceRequestedLow / differenceHighLow);
-    }
-
-    /**
-     * Compute the length of part of a LineString object, built from an array of Coordinate objects.
-     *
-     * @return the length of a LineString, as built from the coordinates array, from start to index.
-     */
-    public static double computePartialLength(Coordinate[] coordinates, int index) {
-        if (index < 1) return 0;    // A line string consisting of a single point has a length of 0.
-        if (index >= coordinates.length) index = coordinates.length - 1;    // Check upper bound.
-
-        Coordinate[] array = new Coordinate[index + 1];
-
-        for (int i = 0; i <= index; i++) {
-            array[i] = coordinates[i];
-        }
-
-        CoordinateSequence sequence = gf.getCoordinateSequenceFactory().create(array);
-        LineString lineString = new LineString(sequence, gf);
-
-        return lineString.getLength();
-    }
 }
