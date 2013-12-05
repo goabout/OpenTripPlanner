@@ -49,8 +49,6 @@ public class GrizzlyServer {
 
     public static final String CLIENT_WAR_FILENAME = "client.war";
     final String[] FALLBACK_CLIENT_DIRS = new String[] {
-            "otp-leaflet-client/src/main/webapp/",
-            "../otp-leaflet-client/src/main/webapp/",
             "otp-openlayers-client/src/main/webapp/",
             "../otp-openlayers-client/src/main/webapp/"
     };
