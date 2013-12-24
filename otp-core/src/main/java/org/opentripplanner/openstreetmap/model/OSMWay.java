@@ -66,6 +66,17 @@ public class OSMWay extends OSMWithTags {
     public boolean isRoundabout() {
         return "roundabout".equals(getTag("junction"));
     }
+    
+    /**
+     * Is this way capable of receiving real-time data?
+     * Is the highway type of the OSMway it is based on either "motorway", "trunk", "primary" or secondary?
+     * 
+     * @return
+     */
+    public boolean isRealtimeCapable() {
+    	String highway = getTag("highway");
+        return "motorway".equals(highway) || "secondary".equals(highway) || "primary".equals(highway) || "trunk".equals(highway);
+    }
 
     /**
      * Returns true if this is a one-way street for driving.

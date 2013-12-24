@@ -76,22 +76,22 @@ public class CsvExporter {
 		}
 		
 		for (Iterator<Edge> iterator = edges.iterator(); iterator.hasNext();) {			
-			Edge edge = (Edge) iterator.next();							
-			Vertex vertexFrom = edge.getFromVertex();
-			Vertex vertexTo = edge.getToVertex();			
-			int vertexFromhashCode = vertexFrom.hashCode();
-			int vertexTohashCode = vertexTo.hashCode();	
-			int edgeHashcode = generateEdgeexternalId(edge);
-			
+			Edge edge = (Edge) iterator.next();		
 			//check is the edge is a street edge
 			//add only street edge
-			if(edge instanceof PlainStreetEdge){	
+			if(edge instanceof PlainStreetEdge){
+				if (!edge.isRealtimeCapable()) {
+					continue;
+				}
+				Vertex vertexFrom = edge.getFromVertex();
+				Vertex vertexTo = edge.getToVertex();			
+				int vertexFromhashCode = vertexFrom.hashCode();
+				int vertexTohashCode = vertexTo.hashCode();	
+				int edgeHashcode = generateEdgeexternalId(edge);
 				// get shape of the edge			
 				LineString l = edge.getGeometry();							
 				String shape = l.toString();											
-				write(edgeHashcode,vertexFromhashCode,vertexTohashCode,shape);
-				checkPropertytype c = new checkPropertytype(edge);
-				
+				write(edgeHashcode,vertexFromhashCode,vertexTohashCode,shape);				
 		}
 		}
 		LOG.info("Done adding edges");
@@ -107,9 +107,14 @@ public class CsvExporter {
 		
 		for (Iterator<Edge> iterator = edges.iterator(); iterator.hasNext();) {
 			Edge edge = (Edge) iterator.next();
-			int internal_id = edge.getId();
-			int external_id = generateEdgeexternalId(edge);
-			write(external_id, internal_id);
+			if(edge instanceof PlainStreetEdge){	
+				if (!edge.isRealtimeCapable()) {
+					continue;
+				}
+				int internal_id = edge.getId();
+				int external_id = generateEdgeexternalId(edge);
+				write(external_id, internal_id);
+			}
 		}
 		LOG.info("Done adding external ids");
 	}
