@@ -2,7 +2,9 @@ package org.opentripplanner.csvexporter;
 
 import java.io.File;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -43,12 +45,19 @@ public class CsvExporter implements csvExporterInterface  {
 		this.addEdgestoCsv(this.graph.getEdges());
 		this.addExternalandOtpidToCsv(this.graph.getEdges());
 		
-		// after writing the new csv file we compute the percentage of
-		// difference between latest uploaded and the new csv files
-		// TODO:
+		// after writing the new CSV file we compute the percentage of
+		// difference between latest uploaded and the new CSV files		
 		csvDiff csvdiff =new csvDiff();
+		ArrayList<String> diffEdge = csvdiff.computeEdgediff();
+				
+		float percentage = ((float)(diffEdge.size() / (float)csvdiff.dataLatestuploadedCsv.get(0).size()) * 100);
 		
+		String s = String.format("%.2f",percentage);
+		LOG.info("Percentage of edge changes from the last uploaded edge : "+ s);				
+		LOG.info("Number of edges added :"+diffEdge.size());
 		
+		adapticonCsv adapticon = new adapticonCsv();
+		File f = adapticon.adapticonSegementFile();
 	}
 
 	public void addVertextoCsv(Collection<Vertex> vertices) {

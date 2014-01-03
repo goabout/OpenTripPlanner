@@ -20,8 +20,9 @@ public class csvReader implements csvExporterInterface{
 				BufferedReader reader = new BufferedReader(new FileReader(csv.getAbsolutePath()));				
 				String line = "";
 				
-				while((line=reader.readLine())!=null){						
-					String[] row = line.trim().split(",");						
+				while((line=reader.readLine())!=null){		
+								        
+					String[] row = line.trim().split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");						
 					ArrayList<String> rowData = new ArrayList<String>();
 					for(String e: row){								
 						rowData.add(e);
