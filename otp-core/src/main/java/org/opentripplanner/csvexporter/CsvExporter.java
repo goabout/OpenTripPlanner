@@ -1,8 +1,6 @@
 package org.opentripplanner.csvexporter;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -20,34 +18,37 @@ import org.opentripplanner.routing.impl.GraphServiceFileImpl;
 import org.opentripplanner.routing.services.GraphService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.codec.digest.DigestUtils;
 
-import com.csvreader.CsvWriter;
-
-public class CsvExporter {
-		
-	private String DEFAULT_EXPORTER_DIRECTORY = null;
+public class CsvExporter implements csvExporterInterface  {
+	
 	private String dateTime = null;
-	private File timestampDirectory = null;
+	private File timestampDirectory = null;	
 	private final GraphService graphService;
 	private final Graph graph;
-	
-	private static final Logger LOG = LoggerFactory
-			.getLogger(GraphServiceFileImpl.class);
+	private csvWriter writer = null;
 
 	public CsvExporter(GraphService graphService) {
 		this.graphService = graphService;
 		this.graph = graphService.getGraph();
 		//get the name time stamp directory
-		this.dateTime = getDateTime();
-		this.DEFAULT_EXPORTER_DIRECTORY = System.getProperty("user.dir").toString()+"/exporters";		
-		this.timestampDirectory = new File(DEFAULT_EXPORTER_DIRECTORY+"/"+dateTime+"/");		
+		this.dateTime = getDateTime();		
+		this.timestampDirectory = new File(DEFAULT_EXPORTER_DIRECTORY+"/"+dateTime+"/");
+		this.writer = new csvWriter(this.timestampDirectory);		
 	}
 
 	public void run() {
-		LOG.info("Run CsvExporter");
+		LOG.info("Run CsvExporter");				
 		this.addVertextoCsv(this.graph.getVertices());
 		this.addEdgestoCsv(this.graph.getEdges());
 		this.addExternalandOtpidToCsv(this.graph.getEdges());
+		
+		// after writing the new csv file we compute the percentage of
+		// difference between latest uploaded and the new csv files
+		// TODO:
+		csvDiff csvdiff =new csvDiff();
+		
+		
 	}
 
 	public void addVertextoCsv(Collection<Vertex> vertices) {
@@ -55,26 +56,28 @@ public class CsvExporter {
 		//check if the directory exists();
 		if (!this.timestampDirectory.exists()){			
 			this.timestampDirectory.mkdirs();			
-		}
-		
+		}		
 		for (Iterator<Vertex> iterator = vertices.iterator(); iterator
 				.hasNext();) {
 			Vertex vertex = (Vertex) iterator.next();
-			int hashCode = vertex.hashCode();
-			write(hashCode,vertex.getX(), vertex.getY());						
-		}
-		LOG.info("Done adding vertices");
-	
+
+			// check if the vertex is real time capable
+			if(isVertexRealtimeCapable(vertex)){						
+				String hashCode = generateVertexexternalId(vertex);
+				this.writer.write(hashCode,vertex.getX(), vertex.getY());
+			}
+		}		
+		LOG.info("Done adding vertices");	
 	}
 
 	public void addEdgestoCsv(Collection<Edge> edges) {
 		LOG.info("adding edges....");
-		
+
 		//check if the directory exists();
 		if (!this.timestampDirectory.exists()){			
 			this.timestampDirectory.mkdirs();			
 		}
-		
+
 		for (Iterator<Edge> iterator = edges.iterator(); iterator.hasNext();) {			
 			Edge edge = (Edge) iterator.next();		
 			//check is the edge is a street edge
@@ -85,26 +88,25 @@ public class CsvExporter {
 				}
 				Vertex vertexFrom = edge.getFromVertex();
 				Vertex vertexTo = edge.getToVertex();			
-				int vertexFromhashCode = vertexFrom.hashCode();
-				int vertexTohashCode = vertexTo.hashCode();	
-				int edgeHashcode = generateEdgeexternalId(edge);
-				// get shape of the edge			
-				LineString l = edge.getGeometry();							
-				String shape = l.toString();											
-				write(edgeHashcode,vertexFromhashCode,vertexTohashCode,shape);				
-		}
+				String vertexFromhashCode = generateVertexexternalId(vertexFrom);
+				String vertexTohashCode = generateVertexexternalId(vertexTo);							
+				LineString l = edge.getGeometry();												
+				String shape = l.toString();				
+				String edgeHashcode = generateEdgeexternalId(edge,shape);
+				this.writer.write(edgeHashcode,vertexFromhashCode,vertexTohashCode,shape);				
+			}
 		}
 		LOG.info("Done adding edges");
 	}
-	
+
 	public void addExternalandOtpidToCsv(Collection<Edge> edges) {
 		LOG.info("adding external ids....");
-		
+
 		//check if the directory exists();
 		if (!this.timestampDirectory.exists()){			
 			this.timestampDirectory.mkdirs();			
 		}
-		
+
 		for (Iterator<Edge> iterator = edges.iterator(); iterator.hasNext();) {
 			Edge edge = (Edge) iterator.next();
 			if(edge instanceof PlainStreetEdge){	
@@ -112,160 +114,84 @@ public class CsvExporter {
 					continue;
 				}
 				int internal_id = edge.getId();
-				int external_id = generateEdgeexternalId(edge);
-				write(external_id, internal_id);
+				LineString l = edge.getGeometry();												
+				String shape = l.toString();				
+				String external_id = generateEdgeexternalId(edge,shape);
+				this.writer.write(external_id, Integer.toString(internal_id));
 			}
 		}
 		LOG.info("Done adding external ids");
 	}
-	
-	/** write method is overloaded to create and write CSV files
-	 * @param longitude : longitude of the vertex 
-	 * @param latitude	: latitude of the vertex
-	 * @param hashCode : hash code of longitude and latitude
-	 * this function writes a vertex.csv file containing hashCode(Id), latitude and longitude
-	 */
-	//TODO: move the write functions to csvWritejava
-	private void write(int vertexHashcode, double longitude, double latitude) {
-		
-		String csv = this.timestampDirectory + "/"+this.dateTime + "_"+ "vertices.csv";					
-		//check to see if the file already exists
-		boolean exists = new File(csv).exists();
-		
-		try {
-			CsvWriter csvOutput = new CsvWriter(new FileWriter(csv, true), ',');
-			if (!exists) {
-				csvOutput.write("external_id");
-				csvOutput.write("latitude");
-				csvOutput.write("longitude");
-				csvOutput.endRecord();
-				//LOG.info("header added");
+
+	public boolean isVertexRealtimeCapable(Vertex vertex){
+
+		//check for real time vertices
+		if(vertex.getIncoming()!=null || vertex.getOutgoing()!=null){
+			Collection<Edge> incomingEdges = vertex.getIncoming();
+			Collection<Edge> outgoingEdges = vertex.getOutgoing();
+			boolean incomingEdgeCheck = false;
+			boolean outgoingEdgeCheck = false;
+
+			//at least one incoming edge isRealtimeCapable or at least one outgoing edge isRealtimeCapable
+			for (Iterator<Edge> incomingEdgeIter = incomingEdges.iterator(); incomingEdgeIter.hasNext();) {			
+				Edge inEdge = (Edge) incomingEdgeIter.next();
+				if(inEdge instanceof PlainStreetEdge){
+					if (inEdge.isRealtimeCapable()) {						
+						incomingEdgeCheck =true;					
+					}			
+				}	
 			}
-			// else if doesn't add the header
-			// but adds records			
-			csvOutput.write(Integer.toString(vertexHashcode));
-			csvOutput.write(Double.toString(latitude));
-			csvOutput.write(Double.toString(longitude));
-			csvOutput.endRecord();
-			csvOutput.close();
-		} catch (IOException e) {
-			LOG.error("Error while writing to CSV file: {}", e.getMessage());
-
-		}
-
-	}
-	
-	/** write method is overloaded to create and write CSV files
-	 * @param vertexFromhashCode : hash code of from vertex of the edge
-	 * @param vertexTohashCode : hash code of to vertex of the edge
-	 * @param edgeHashcode : hash code of the edge row
-	 */
-	private void write(int edgeHashcode, int vertexFromhashCode, int vertexTohashCode, String shape) {
-		//check if the directory exists();
-		if (!this.timestampDirectory.exists()){			
-			this.timestampDirectory.mkdir();			
-		}
-				
-		String csv = this.timestampDirectory + "/" + this.dateTime + "_"+ "edges.csv";
-
-		// before we open the file check to see if it already exists
-		boolean exists = new File(csv).exists();
-		//LOG.info("to file: ", csv);
-
-		try {
-			CsvWriter csvOutput = new CsvWriter(new FileWriter(csv, true), ',');
-			if (!exists) {
-				csvOutput.write("external_id");
-				csvOutput.write("from_node_id");
-				csvOutput.write("to_node_id");
-				csvOutput.write("shape");
-				csvOutput.endRecord();
-				//LOG.info("header added");
+			for (Iterator<Edge> outgoingEdgeIter = outgoingEdges.iterator(); outgoingEdgeIter.hasNext();) {			
+				Edge outEdge = (Edge) outgoingEdgeIter.next();
+				if(outEdge instanceof PlainStreetEdge){
+					if (outEdge.isRealtimeCapable()) {						
+						outgoingEdgeCheck =true;					
+					}			
+				}	
 			}
-			// else if doesn't add the header
-			// but adds records
-			
-			csvOutput.write(Integer.toString(edgeHashcode));
-			csvOutput.write(Integer.toString(vertexFromhashCode));
-			csvOutput.write(Integer.toString(vertexTohashCode));
-			csvOutput.write(shape);
-			csvOutput.endRecord();
-			csvOutput.close();
-		} catch (IOException e) {
-			LOG.error("Error while writing to CSV file: {}", e.getMessage());
-
+			if(outgoingEdgeCheck || incomingEdgeCheck)
+				return true;
+			else
+				return false;
+		}		
+		else{
+			return false;
 		}
 	}
 	
-	/**write method is overloaded to create and write CSV files
-	 * @param external_id : hash code generated using edge 
-	 * @param internal_id : OTP id
-	 * this function writes a Externalid.csv file containing external id and OTP id
-	 */
-	private void write(int external_id, int internal_id) {
-		//check if the directory exists();
-		if (!this.timestampDirectory.exists()){			
-			this.timestampDirectory.mkdir();			
-		}
-					
-		String csv = this.timestampDirectory + "/" + this.dateTime + "_" + "externalids.csv";
-
-		// before we open the file check to see if it already exists
-		boolean exists = new File(csv).exists();
-		//LOG.info("to file: ", csv);
-
-		try {
-			CsvWriter csvOutput = new CsvWriter(new FileWriter(csv, true), ',');
-			if (!exists) {
-				csvOutput.write("external_id");
-				csvOutput.write("otp_id");
-				csvOutput.endRecord();
-				//LOG.info("header added");
-			}
-			// else if doesn't add the header
-			// but adds records
-			csvOutput.write(Integer.toString(external_id));
-			csvOutput.write(Integer.toString(internal_id));
-			csvOutput.endRecord();
-			csvOutput.close();
-
-		} catch (IOException e) {
-			LOG.error("Error while writing to CSV file: {}", e.getMessage());
-
-		}
-
+	public String generateVertexexternalId(Vertex v){
+		String row = Double.toString(v.getX())+Double.toString(v.getY());		
+		return hashCode(row);		
 	}
-
+	
 	/**generates external id based on the from vertex, to vertex and shape of the edge
 	 * @param edge
 	 * @return external id 
 	 */
-	private int generateEdgeexternalId(Edge edge) {
+	public String generateEdgeexternalId(Edge edge, String shape) {
 		Vertex vertexFrom = edge.getFromVertex();
 		Vertex vertexTo = edge.getToVertex();
 		int vertexFromhashCode = vertexFrom.hashCode();
 		int vertexTohashCode = vertexTo.hashCode();		
-		//shape not known
-		//let shape be string shape
-		
-		String shape = null;
+
 		String edgeRowstring = Integer.toString(vertexFromhashCode)+Integer.toString(vertexTohashCode)+shape;  					
-		int edgeHashcode = hashCode(edgeRowstring);
+		String edgeHashcode = hashCode(edgeRowstring);
 		return edgeHashcode;
 	}
-	
-	public int hashCode(String s){
-				
-		return s.hashCode();		
+
+	public String hashCode(String s){		
+		DigestUtils.md5Hex(s);						
+		return DigestUtils.md5Hex(s);	
 	}
-	
+
 	/** gets Date and Time in string format
 	 * @return : yyyyMMdd_hhmmss in string format
 	 */
 	private final static String getDateTime() {
 		DateFormat df = new SimpleDateFormat("hhmmss");		
 		df.setTimeZone(TimeZone.getDefault());			
-		return df.format(new Date())+"_"+Long.toString(System.currentTimeMillis());
+		//return df.format(new Date())+"_"+Long.toString(System.currentTimeMillis());
+		return Long.toString(System.currentTimeMillis());
 	}
 
 }
