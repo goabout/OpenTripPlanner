@@ -57,7 +57,7 @@ public class CsvExporter implements csvExporterInterface  {
 		LOG.info("Number of edges added :"+diffEdge.size());
 		
 		adapticonCsv adapticon = new adapticonCsv();
-		File f = adapticon.adapticonSegementFile();
+		adapticon.createAdapticoncsv();
 	}
 
 	public void addVertextoCsv(Collection<Vertex> vertices) {
@@ -196,7 +196,7 @@ public class CsvExporter implements csvExporterInterface  {
 	/** gets Date and Time in string format
 	 * @return : yyyyMMdd_hhmmss in string format
 	 */
-	private final static String getDateTime() {
+	public final static String getDateTime() {
 		DateFormat df = new SimpleDateFormat("hhmmss");		
 		df.setTimeZone(TimeZone.getDefault());			
 		//return df.format(new Date())+"_"+Long.toString(System.currentTimeMillis());

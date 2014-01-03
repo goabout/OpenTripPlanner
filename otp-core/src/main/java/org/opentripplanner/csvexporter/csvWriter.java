@@ -102,6 +102,7 @@ public class csvWriter{
 	/**write method is overloaded to create and write CSV files
 	 * @param external_id : hash code generated using edge 
 	 * @param internal_id : OTP id
+	 * @param Filename : externalids or adapticon
 	 * this function writes a Externalid.csv file containing external id and OTP id
 	 */
 	public void write(String external_id, String internal_id) {
@@ -109,9 +110,14 @@ public class csvWriter{
 		if (!this.dir.exists()){			
 			this.dir.mkdir();			
 		}
-					
-		String csv = this.dir + "/" + this.dateTime + "_" + "externalids.csv";
-
+		
+		String csv = this.dir + "/" + this.dateTime + "_" + "externalids.csv";		
+		String header = "external_id"+","+"otp_id";
+		
+		if(this.dir.getPath().contains("adapticon")){				   
+				csv = this.dir+"/" + this.dateTime + "_" +"adapticonExternalids.csv";
+				header = "adapticon_segment_id"+","+"internal_id";}	
+				
 		// before we open the file check to see if it already exists
 		boolean exists = new File(csv).exists();
 		//LOG.info("to file: ", csv);
@@ -119,8 +125,9 @@ public class csvWriter{
 		try {
 			CsvWriter csvOutput = new CsvWriter(new FileWriter(csv, true), ',');
 			if (!exists) {
-				csvOutput.write("external_id");
-				csvOutput.write("otp_id");
+				String[] head = header.split(",");
+				csvOutput.write(head[0]);
+				csvOutput.write(head[1]);
 				csvOutput.endRecord();
 				//LOG.info("header added");
 			}
@@ -137,6 +144,5 @@ public class csvWriter{
 		}
 
 	}
-	
-
+			
 }
