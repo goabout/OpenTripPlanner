@@ -50,9 +50,26 @@ class ShortTermSpeedsMatrix extends SpeedsMatrix {
     }
 
     float getCarSpeed(long timestamp, int segment, int day, int hour, int minute) {
-        final int index = (int) ((timestamp - startTime) / TIME_SLOT);
+        final int index = floorDiv((timestamp - startTime), TIME_SLOT);
         if (index < 0 || index >= carSpeeds.length) return Float.NaN;
         if (segment < 1 || segment > carSpeeds[index].length) return Float.NaN;
         return carSpeeds[index][segment - 1];
+    }
+
+    /**
+     * Divide two integers, rounding towards negative infinity. A similar method will show up in JDK
+     * 1.8, but in the meantime we will (unfortunately) just have to use this special case solution.
+     * @param dividend The dividend, which can be any long.
+     * @param divisor The divisor, which must be positive at all times.
+     * @return The quotient converted to an int. Preventing overflow is the caller's responsibility.
+     */
+    private static int floorDiv(long dividend, long divisor) {
+        if (divisor < 1) throw new ArithmeticException("All floorDiv() calls require divisor > 0.");
+
+        if (dividend < 0) {
+            dividend -= divisor - 1;
+        }
+
+        return (int) (dividend / divisor);
     }
 }
