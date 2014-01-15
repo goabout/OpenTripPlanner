@@ -212,25 +212,50 @@ public class CarSpeedsTest {
         arrive = edge.traverse(depart);
         assertEquals(3000L, arrive.getTimeInMillis());
 
+        routingRequest.dateTime = 297L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(300000L, arrive.getTimeInMillis());
+
         routingRequest.dateTime = 300L;
         depart = new State(routingRequest);
         arrive = edge.traverse(depart);
         assertEquals(304000L, arrive.getTimeInMillis());
+
+        routingRequest.dateTime = 596L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(600000L, arrive.getTimeInMillis());
 
         routingRequest.dateTime = 600L;
         depart = new State(routingRequest);
         arrive = edge.traverse(depart);
         assertEquals(603000L, arrive.getTimeInMillis());
 
+        routingRequest.dateTime = 897L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(900000L, arrive.getTimeInMillis());
+
         routingRequest.dateTime = 900L;
         depart = new State(routingRequest);
         arrive = edge.traverse(depart);
         assertEquals(905000L, arrive.getTimeInMillis());
 
+        routingRequest.dateTime = 1195L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(1200000L, arrive.getTimeInMillis());
+
         routingRequest.dateTime = 1200L;
         depart = new State(routingRequest);
         arrive = edge.traverse(depart);
         assertEquals(1203000L, arrive.getTimeInMillis());
+
+        routingRequest.dateTime = 1497L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(1500000L, arrive.getTimeInMillis());
 
         routingRequest.ignoreRealtimeUpdates = true;
         assertNotNull(routingRequest.rctx.carSpeedsSnapshot);
