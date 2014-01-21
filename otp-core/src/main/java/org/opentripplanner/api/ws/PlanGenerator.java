@@ -110,6 +110,45 @@ public class PlanGenerator {
                 paths = pathService.getPaths(options);
                 tooSloped = true;
             }
+
+            if (options.getStartingTransitTripId() == null && paths != null && paths.size() > 0) {
+                GraphPath graphPath = paths.get(0);
+                RoutingRequest backwardOptions = options.clone();
+                if (!(options.isArriveBy())) {
+                    backwardOptions.rctx = options.rctx.clone();
+                    backwardOptions.rctx.origin = options.rctx.target;
+                    backwardOptions.rctx.target = options.rctx.origin;
+                    backwardOptions.setArriveBy(true);
+                    backwardOptions.dateTime = graphPath.states.getLast().getTimeSeconds();
+                    backwardOptions.worstTime = graphPath.states.getFirst().getTimeSeconds();
+                    backwardOptions.numItineraries = 1;
+
+                    List<GraphPath> backwardPaths = pathService.getPaths(backwardOptions);
+                    if (backwardPaths == null || backwardPaths.size() != 1) {
+                        LOG.error("A path could not be rediscovered backward. This implies a bug.");
+                    } else {
+                        graphPath = backwardPaths.get(0);
+                    }
+                }
+
+                RoutingRequest forwardOptions = backwardOptions.clone();
+                forwardOptions.rctx = backwardOptions.rctx.clone();
+                forwardOptions.rctx.origin = backwardOptions.rctx.target;
+                forwardOptions.rctx.target = backwardOptions.rctx.origin;
+                forwardOptions.setArriveBy(false);
+                forwardOptions.dateTime = graphPath.states.getFirst().getTimeSeconds();
+                forwardOptions.worstTime = graphPath.states.getLast().getTimeSeconds();
+                forwardOptions.numItineraries = 1;
+
+                List<GraphPath> forwardPaths = pathService.getPaths(forwardOptions);
+                if (forwardPaths == null || forwardPaths.size() != 1) {
+                    LOG.error("A path could not be rediscovered forward. This implies a bug.");
+                } else {
+                    graphPath = forwardPaths.get(0);
+                }
+
+                paths.set(0, graphPath);
+            }
         } catch (VertexNotFoundException e) {
             LOG.info("Vertex not found: " + options.getFrom() + " : " + options.getTo(), e);
             throw e;

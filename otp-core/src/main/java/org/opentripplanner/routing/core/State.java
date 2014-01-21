@@ -296,7 +296,8 @@ public class State implements Cloneable {
             return false;
 
         if (this.similarRouteSequence(other)) {
-            return this.weight <= other.weight;
+            return this.weight <= other.weight &&
+                    other.getElapsedTimeSeconds() >= this.getElapsedTimeSeconds();
         }
 
         double weightDiff = this.weight / other.weight;

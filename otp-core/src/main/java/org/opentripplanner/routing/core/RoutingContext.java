@@ -76,10 +76,10 @@ public class RoutingContext implements Cloneable {
     public final Vertex toVertex;
 
     // origin means "where the initial state will be located" not "the beginning of the trip from the user's perspective"
-    public final Vertex origin;
+    public Vertex origin; // not final so we can reverse-clone
 
     // target means "where this search will terminate" not "the end of the trip from the user's perspective"
-    public final Vertex target;
+    public Vertex target; // not final so we can reverse-clone
     
     // The back edge associated with the origin - i.e. continuing a previous search.
     // NOTE: not final so that it can be modified post-construction for testing.
@@ -413,4 +413,12 @@ public class RoutingContext implements Cloneable {
         return nRemoved;
     }
 
+    public RoutingContext clone() {
+        try {
+            RoutingContext clone = (RoutingContext) super.clone();
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

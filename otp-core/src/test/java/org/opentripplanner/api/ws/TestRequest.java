@@ -819,8 +819,8 @@ public class TestRequest extends TestCase {
         // Do the planning again
         response = planner.getItineraries();
         itinerary = response.getPlan().itinerary.get(0);
-        // The id of the second bus should be different
-        assertEquals("190W1280", itinerary.legs.get(1).tripId);
+        // The id of the busses should be different
+        assertFalse("190W1280".equals(itinerary.legs.get(1).tripId));
         assertFalse("751W1330".equals(itinerary.legs.get(3).tripId));
 
         // Now apply a real-time update: let the to-trip have a delay of 3 seconds
