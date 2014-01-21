@@ -253,7 +253,7 @@ public class GenericAStar implements SPTService { // maybe this should be wrappe
                             System.out.println("         too expensive to reach, not enqueued. estimated weight = " + estimate);
                     } else if (isWorstTimeExceeded(v, options)) {
                         // too much time to get here
-                    	if (_verbose)
+                        if (_verbose)
                             System.out.println("         too much time to reach, not enqueued. time = " + v.getTimeSeconds());
                     } else {
                         if (spt.add(v)) {

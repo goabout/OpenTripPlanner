@@ -319,11 +319,11 @@ public class State implements Cloneable {
     }
 
     public int getTimeDeltaSeconds() {
-        return (int) (getTimeSeconds() - backState.getTimeSeconds());
+        return backState != null ? (int) (getTimeSeconds() - backState.getTimeSeconds()) : 0;
     }
 
     public int getAbsTimeDeltaSeconds() {
-        return (int) Math.abs(getTimeSeconds() - backState.getTimeSeconds());
+        return Math.abs(getTimeDeltaSeconds());
     }
 
     public double getWalkDistanceDelta () {
@@ -550,21 +550,22 @@ public class State implements Cloneable {
     }
     
     public boolean allPathParsersAccept() {
-    	PathParser[] parsers = this.stateData.opt.rctx.pathParsers;
-    	for (int i = 0; i < parsers.length; i++)
-    		if ( ! parsers[i].accepts(pathParserStates[i]))
-    			return false;
-    	return true;
-	}
-    		
-	public String getPathParserStates() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("( ");
-		for (int i : pathParserStates)
-			sb.append(String.format("%02d ", i));
-		sb.append(")");
-		return sb.toString();
-	}
+        PathParser[] parsers = this.stateData.opt.rctx.pathParsers;
+        for (int i = 0; i < parsers.length; i++) {
+            if ( ! parsers[i].accepts(pathParserStates[i])) return false;
+        }
+        return true;
+    }
+
+    public String getPathParserStates() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("( ");
+        for (int i : pathParserStates) {
+            sb.append(String.format("%02d ", i));
+        }
+        sb.append(")");
+        return sb.toString();
+    }
 
     /** @return the last TripPattern used in this path (which is set when leaving the vehicle). */
     public TripPattern getLastPattern() {

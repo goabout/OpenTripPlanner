@@ -160,6 +160,18 @@ public class PlanGenerator {
             throw new PathNotFoundException();
         }
 
+        for (GraphPath graphPath : paths) {
+            if (originalOptions.isArriveBy()) {
+                if (graphPath.states.getLast().getTimeSeconds() > originalOptions.dateTime) {
+                    LOG.error("A graph path arrives after the requested time. This implies a bug.");
+                }
+            } else {
+                if (graphPath.states.getFirst().getTimeSeconds() < originalOptions.dateTime) {
+                    LOG.error("A graph path leaves before the requested time. This implies a bug.");
+                }
+            }
+        }
+
         TripPlan plan = generatePlan(paths, originalOptions);
         if (plan != null) {
             for (Itinerary i : plan.itinerary) {
