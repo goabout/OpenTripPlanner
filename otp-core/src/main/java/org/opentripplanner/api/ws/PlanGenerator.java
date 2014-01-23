@@ -111,7 +111,9 @@ public class PlanGenerator {
                 tooSloped = true;
             }
 
-            if (options.getStartingTransitTripId() == null && paths != null && paths.size() > 0) {
+            if (options.getStartingTransitTripId() == null && options.getModes().isTransit() &&
+                    paths != null && paths.size() > 0) {
+                // Perform wait time compression on transit trips that don't start onboard vehicles.
                 GraphPath graphPath = paths.get(0);
                 RoutingRequest backwardOptions = options.clone();
                 if (!(options.isArriveBy())) {
@@ -124,7 +126,7 @@ public class PlanGenerator {
                     backwardOptions.numItineraries = 1;
 
                     List<GraphPath> backwardPaths = pathService.getPaths(backwardOptions);
-                    if (backwardPaths == null || backwardPaths.size() != 1) {
+                    if (backwardPaths == null || backwardPaths.size() < 1) {
                         LOG.error("A path could not be rediscovered backward. This implies a bug.");
                     } else {
                         graphPath = backwardPaths.get(0);
@@ -141,7 +143,7 @@ public class PlanGenerator {
                 forwardOptions.numItineraries = 1;
 
                 List<GraphPath> forwardPaths = pathService.getPaths(forwardOptions);
-                if (forwardPaths == null || forwardPaths.size() != 1) {
+                if (forwardPaths == null || forwardPaths.size() < 1) {
                     LOG.error("A path could not be rediscovered forward. This implies a bug.");
                 } else {
                     graphPath = forwardPaths.get(0);
