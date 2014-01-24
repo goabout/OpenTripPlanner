@@ -107,6 +107,7 @@ public class PlanGenerator {
                 // There are no paths that meet the user's slope restrictions.
                 // Try again without slope restrictions (and warn user).
                 options.maxSlope = Double.MAX_VALUE;
+                options.maxWalkDistance = originalOptions.maxWalkDistance;
                 paths = pathService.getPaths(options);
                 tooSloped = true;
             }
@@ -124,6 +125,7 @@ public class PlanGenerator {
                     backwardOptions.dateTime = graphPath.states.getLast().getTimeSeconds();
                     backwardOptions.worstTime = graphPath.states.getFirst().getTimeSeconds();
                     backwardOptions.numItineraries = 1;
+                    backwardOptions.maxWalkDistance = originalOptions.maxWalkDistance;
 
                     List<GraphPath> backwardPaths = pathService.getPaths(backwardOptions);
                     if (backwardPaths == null || backwardPaths.size() < 1) {
@@ -141,6 +143,7 @@ public class PlanGenerator {
                 forwardOptions.dateTime = graphPath.states.getFirst().getTimeSeconds();
                 forwardOptions.worstTime = graphPath.states.getLast().getTimeSeconds();
                 forwardOptions.numItineraries = 1;
+                forwardOptions.maxWalkDistance = originalOptions.maxWalkDistance;
 
                 List<GraphPath> forwardPaths = pathService.getPaths(forwardOptions);
                 if (forwardPaths == null || forwardPaths.size() < 1) {
