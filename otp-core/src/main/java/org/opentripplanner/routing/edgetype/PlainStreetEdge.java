@@ -372,7 +372,7 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
             // Apply turn restrictions
             if (options.arriveBy && !canTurnOnto(backPSE, s0, backMode)) {
                 return null;
-            } else if (!backPSE.canTurnOnto(this, s0, traverseMode)) {
+            } else if (!options.arriveBy && !backPSE.canTurnOnto(this, s0, traverseMode)) {
                 return null;
             }
 
@@ -397,7 +397,7 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
                 realTurnCost = backOptions.getIntersectionTraversalCostModel().computeTraversalCost(
                         traversedVertex, this, backPSE, backMode, backOptions, (float) speed,
                         (float) backSpeed);
-            } else if (fromv instanceof IntersectionVertex) { // depart-after search
+            } else if (!options.arriveBy && fromv instanceof IntersectionVertex) { // depart-after search
                 IntersectionVertex traversedVertex = ((IntersectionVertex) fromv);
 
                 realTurnCost = options.getIntersectionTraversalCostModel().computeTraversalCost(
