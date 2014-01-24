@@ -15,6 +15,7 @@ package org.opentripplanner.standalone;
 
 import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.visualizer.GraphVisualizer;
+import org.opentripplanner.csvexporter.CsvExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,11 @@ public class OTPMain {
         GraphVisualizer graphVisualizer = configurator.visualizerFromParameters();
         if (graphVisualizer != null) {
             graphVisualizer.run();
+        }
+
+        CsvExporter csvExporter = configurator.csvExportFromParameters();
+        if (csvExporter != null) {
+            csvExporter.run();
         }
         GrizzlyServer grizzlyServer = configurator.serverFromParameters();
         if (grizzlyServer != null) {

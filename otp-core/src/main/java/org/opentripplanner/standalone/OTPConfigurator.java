@@ -47,6 +47,7 @@ import org.opentripplanner.routing.services.RemainingWeightHeuristicFactory;
 import org.opentripplanner.routing.services.SPTService;
 import org.opentripplanner.updater.PropertiesPreferences;
 import org.opentripplanner.visualizer.GraphVisualizer;
+import org.opentripplanner.csvexporter.CsvExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -271,6 +272,16 @@ public class OTPConfigurator {
             OTPComponentProviderFactory cpf = getComponentProviderFactory();
             GraphVisualizer visualizer = new GraphVisualizer(getGraphService());
             return visualizer;
+        } else return null;
+    }
+
+    public CsvExporter csvExportFromParameters() {
+        if (params.csvexport) {
+            LOG.info("CSV export active");
+            // get a component provider factory to force injection/post-construct
+            OTPComponentProviderFactory cpf = getComponentProviderFactory();
+            CsvExporter csvExporter = new CsvExporter(getGraphService());
+            return csvExporter;
         } else return null;
     }
 

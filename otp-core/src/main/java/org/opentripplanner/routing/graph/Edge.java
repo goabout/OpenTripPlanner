@@ -197,6 +197,13 @@ public abstract class Edge implements Serializable {
     public boolean isRoundabout() {
         return false;
     }
+    
+    /**
+     * Edges are not real-time capable by default
+     */
+    public boolean isRealtimeCapable() {
+        return false;
+    }
 
     /**
      * Traverse this edge.

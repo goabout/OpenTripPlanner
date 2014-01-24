@@ -110,6 +110,11 @@ public class PartialPlainStreetEdge extends PlainStreetEdge {
         return parentEdge.isRoundabout();
     }
     
+    @Override
+    public boolean isRealtimeCapable() {
+        return parentEdge.isRealtimeCapable();
+    }
+    
     /**
      * Returns true if this edge is trivial - beginning and ending at the same point.
      */

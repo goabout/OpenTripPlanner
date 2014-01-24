@@ -95,6 +95,9 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
     @Getter @Setter
     private boolean roundabout = false;
     
+    @Getter @Setter
+    private boolean realtimeCapable = false;
+    
     @Getter
     private Set<Alert> notes;
 
