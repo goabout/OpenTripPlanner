@@ -2,11 +2,9 @@ package org.opentripplanner.csvexporter;
 
 import java.io.File;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
 
@@ -16,10 +14,7 @@ import org.opentripplanner.routing.edgetype.PlainStreetEdge;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
-import org.opentripplanner.routing.impl.GraphServiceFileImpl;
 import org.opentripplanner.routing.services.GraphService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.commons.codec.digest.DigestUtils;
 
 public class CsvExporter implements csvExporterInterface  {
@@ -49,7 +44,7 @@ public class CsvExporter implements csvExporterInterface  {
 		// difference between latest uploaded and the new CSV files		
 		csvDiff csvdiff =new csvDiff();
 		ArrayList<String> diffEdge = csvdiff.computeEdgediff();
-				
+								
 		float percentage = ((float)(diffEdge.size() / (float)csvdiff.dataLatestuploadedCsv.get(0).size()) * 100);
 		
 		String s = String.format("%.2f",percentage);

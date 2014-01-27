@@ -19,6 +19,11 @@ public class adapticonCsv implements csvExporterInterface{
 		File adapticon =new File(DEFAULT_EXPORTER_DIRECTORY+"/adapticon");	
 		String[] subFolders = adapticon.list();
 		ArrayList<String> adapticonfiles = new ArrayList<String>();	
+		if(!adapticon.exists()){
+			LOG.error("folder :"+ adapticon.getAbsolutePath() + " doesnt exist. \n " +
+					"Please add the adapticon folder to "+ DEFAULT_EXPORTER_DIRECTORY + 
+					"directory \n and make sure it contains _adapticon.csv file(s)");
+		}
 		
 		for(String s:subFolders){
 			if(s.contains("adapticon")){	
@@ -48,7 +53,7 @@ public class adapticonCsv implements csvExporterInterface{
 		//read latest uploaded externalids csv
 		csvFiles csvfile = new csvFiles();
 		File latestUpcsv = csvfile.getLastUplodedcsv();
-		File lastestExternalidCsvFile = new File(latestUpcsv.getAbsolutePath()+"/"+latestUpcsv.getName()+"_externalids.csv");
+		File lastestExternalidCsvFile = new File(latestUpcsv.getAbsolutePath()+"/"+latestUpcsv.getName().split("_")[0].toString()+"_externalids.csv");
 		csvReader csvread = new csvReader();
 		ArrayList<ArrayList<String>> externalIdlist = csvread.csvTostringArray(lastestExternalidCsvFile);
 				
