@@ -40,7 +40,8 @@ public class csvDiff  implements csvExporterInterface{
 		csvReader csvread = new csvReader();		
 		dataLatestcsv = csvread.csvTostringArray(vertexFile);}}
 		else{
-			LOG.error("No vertex.csv file found on OpenTripPlanner/otp_core/exporters folder. /nPlease make sure csvExpoter is executed");		
+			LOG.error("No vertex.csv file found on OpenTripPlanner/otp_core/exporters folder. /nPlease make sure csvExpoter is executed");
+			return null;
 		}
 		
 		if( lastUploadedcsv != null){			
@@ -50,7 +51,8 @@ public class csvDiff  implements csvExporterInterface{
 		else{
 			LOG.error("No vertex.csv is uploaded. " +
 					"\n Upload the csv file or Change the name of a folder in OpenTripPlanner/otp-core/exporters/ directory to _uploaded"
-					+"\nEg : OpenTripPlanner/otp-core/exporters/1390814339384 to OpenTripPlanner/otp-core/exporters/1390814339384_uploaded/");			
+					+"\nEg : OpenTripPlanner/otp-core/exporters/1390814339384 to OpenTripPlanner/otp-core/exporters/1390814339384_uploaded/");
+			return null;
 		}
 		
 		
@@ -89,7 +91,8 @@ public class csvDiff  implements csvExporterInterface{
 		dataLatestcsv = csvread.csvTostringArray(vertexFile);}}
 		else{
 			LOG.error("No edges.csv file found on OpenTripPlanner/otp_core/exporters folder." +
-					"Please make sure csvExpoter is executed");			
+					"Please make sure csvExpoter is executed");		
+			return null;
 		}
 		
 		if(lastUploadedcsv != null){	
@@ -99,7 +102,8 @@ public class csvDiff  implements csvExporterInterface{
 		else{
 			LOG.error("No edges.csv is uploaded. \n " +
 					"Rename the folder to be differentiated in OpenTripPlanner/otp-core/exporters/ directory to _uploaded" +
-					"\nEg : OpenTripPlanner/otp-core/exporters/1390814339384 \n to OpenTripPlanner/otp-core/exporters/1390814339384_uploaded");						
+					"\nEg : OpenTripPlanner/otp-core/exporters/1390814339384 \n to OpenTripPlanner/otp-core/exporters/1390814339384_uploaded");	
+			return null;
 		}
 		
 		Collection<String> tempUpList = new ArrayList<String>();

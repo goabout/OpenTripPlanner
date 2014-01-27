@@ -44,13 +44,12 @@ public class CsvExporter implements csvExporterInterface  {
 		// difference between latest uploaded and the new CSV files		
 		csvDiff csvdiff =new csvDiff();
 		ArrayList<String> diffEdge = csvdiff.computeEdgediff();
-								
-		float percentage = ((float)(diffEdge.size() / (float)csvdiff.dataLatestuploadedCsv.get(0).size()) * 100);
-		
-		String s = String.format("%.2f",percentage);
-		LOG.info("Percentage of edge changes from the last uploaded edge : "+ s);				
-		LOG.info("Number of edges added :"+diffEdge.size());
-		
+		if(diffEdge != null){		
+			float percentage = ((float)(diffEdge.size() / (float)csvdiff.dataLatestuploadedCsv.get(0).size()) * 100);		
+			String s = String.format("%.2f",percentage);
+			LOG.info("Percentage of edge changes from the last uploaded edge : "+ s);				
+			LOG.info("Number of edges added :"+diffEdge.size());
+		}
 		adapticonCsv adapticon = new adapticonCsv();
 		adapticon.createAdapticoncsv();
 	}
