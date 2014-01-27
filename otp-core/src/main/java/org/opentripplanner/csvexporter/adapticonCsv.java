@@ -1,6 +1,7 @@
 package org.opentripplanner.csvexporter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import com.google.common.io.Files;
@@ -19,6 +20,14 @@ public class adapticonCsv implements csvExporterInterface{
 		File adapticon =new File(DEFAULT_EXPORTER_DIRECTORY+"/adapticon");	
 		String[] subFolders = adapticon.list();
 		ArrayList<String> adapticonfiles = new ArrayList<String>();	
+		if(!adapticon.exists()){
+			LOG.error("Adapticon folder doesnt exist. \n " +
+					"Please add the adapticon folder to "+ DEFAULT_EXPORTER_DIRECTORY + 
+					"directory \n and make sure it contains _adapticon.csv file(s)");
+		}
+		else{
+			return null;
+		}
 		
 		for(String s:subFolders){
 			if(s.contains("adapticon")){	
@@ -48,56 +57,71 @@ public class adapticonCsv implements csvExporterInterface{
 		//read latest uploaded externalids csv
 		csvFiles csvfile = new csvFiles();
 		File latestUpcsv = csvfile.getLastUplodedcsv();
-		File lastestExternalidCsvFile = new File(latestUpcsv.getAbsolutePath()+"/"+latestUpcsv.getName()+"_externalids.csv");
-		csvReader csvread = new csvReader();
-		ArrayList<ArrayList<String>> externalIdlist = csvread.csvTostringArray(lastestExternalidCsvFile);
+		if(latestUpcsv== null){
+			LOG.error("Adapticon folder doesnt exist. \n " +
+					"Please add the adapticon folder to "+ DEFAULT_EXPORTER_DIRECTORY + 
+					" directory \n and make sure it contains _adapticon.csv file(s)");						
+		}		
+		
+		else{					
+							
+			try {
+				File lastestExternalidCsvFile = new File(latestUpcsv.getAbsolutePath()+"/"+latestUpcsv.getName().split("_")[0].toString()+"_externalids.csv");
+				csvReader csvread = new csvReader();				
+				ArrayList<ArrayList<String>> externalIdlist = csvread.csvTostringArray(lastestExternalidCsvFile);
+						
+				//read latest adapticon segment csv file
+				File adapticonCsvfile = adapticonSegementFile();
+				ArrayList<ArrayList<String>> adapticonList = csvread.csvTostringArray(adapticonCsvfile);			
 				
-		//read latest adapticon segment csv file
-		File adapticonCsvfile = adapticonSegementFile();
-		ArrayList<ArrayList<String>> adapticonList = csvread.csvTostringArray(adapticonCsvfile);
-		
-		//link externalId list to the adapticon list using the external_id 
-		ArrayList<String> extId = new ArrayList<String>();
-		for(ArrayList<String> column: externalIdlist){
-			if(column.get(0).equals("external_id")){
-				extId.addAll(column);
-			}						
-		}		
-		
-		ArrayList<String> internalId = new ArrayList<String>();
-		for(ArrayList<String> column: externalIdlist){
-			if(column.get(0).equals("otp_id")){
-				internalId.addAll(column);
-			}						
-		}
-		
-		ArrayList<String> extIdadapticon = new ArrayList<String>();
-		for(ArrayList<String> column: adapticonList){
-			if(column.get(0).equals("external_id")){
-				extIdadapticon.addAll(column);
-			}						
-		}
-		
-		ArrayList<String> intIdadapticon = new ArrayList<String>();
-		for(ArrayList<String> column: adapticonList){
-			if(column.get(0).equals("adapticon_segment_id")){
-				intIdadapticon.addAll(column);
-			}						
-		}
-		
-		File adapticonOutput = new File(DEFAULT_EXPORTER_DIRECTORY+"/adapticon/output/"+CsvExporter.getDateTime());
-		csvWriter csvwrite = new csvWriter(adapticonOutput);			
-										
-		for(String item: intIdadapticon){			
-			int index = intIdadapticon.indexOf(item);
-			if (index != 0){
-				try {
-					if(extId.indexOf(extIdadapticon.get(index))!=-1)
-						csvwrite.write(item,internalId.get(extId.indexOf(extIdadapticon.get(index))));
-				} catch (Exception e) {
-					LOG.error("error writing the adapticon output csv file");
+				
+				//link externalId list to the adapticon list using the external_id 
+				ArrayList<String> extId = new ArrayList<String>();
+				for(ArrayList<String> column: externalIdlist){
+					if(column.get(0).equals("external_id")){
+						extId.addAll(column);
+					}						
+				}		
+				
+				ArrayList<String> internalId = new ArrayList<String>();
+				for(ArrayList<String> column: externalIdlist){
+					if(column.get(0).equals("otp_id")){
+						internalId.addAll(column);
+					}						
 				}
-			}						
-		}		
-	}	
+				
+				ArrayList<String> extIdadapticon = new ArrayList<String>();
+				for(ArrayList<String> column: adapticonList){
+					if(column.get(0).equals("external_id")){
+						extIdadapticon.addAll(column);
+					}						
+				}
+				
+				ArrayList<String> intIdadapticon = new ArrayList<String>();
+				for(ArrayList<String> column: adapticonList){
+					if(column.get(0).equals("adapticon_segment_id")){
+						intIdadapticon.addAll(column);
+					}						
+				}
+				
+				File adapticonOutput = new File(DEFAULT_EXPORTER_DIRECTORY+"/adapticon/output/"+CsvExporter.getDateTime());
+				csvWriter csvwrite = new csvWriter(adapticonOutput);			
+												
+				for(String item: intIdadapticon){			
+					int index = intIdadapticon.indexOf(item);
+					if (index != 0){
+						try {
+							if(extId.indexOf(extIdadapticon.get(index))!=-1)
+								csvwrite.write(item,internalId.get(extId.indexOf(extIdadapticon.get(index))));
+						} catch (Exception e) {
+							LOG.error("error writing the adapticon output csv file");
+						}
+					}						
+				}
+			} catch (Exception e) {
+				LOG.error(e.toString());
+			}		
+		}
+			
+	}
 }
