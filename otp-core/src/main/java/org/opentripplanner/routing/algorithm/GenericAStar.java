@@ -112,7 +112,7 @@ public class GenericAStar implements SPTService { // maybe this should be wrappe
         heuristic.initialize(initialState, rctx.target, abortTime);
         if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
             LOG.warn("Timeout during initialization of interleaved bidirectional heuristic.");
-            options.rctx.debug.timedOut = true;
+            options.rctx.debugOutput.timedOut();
             return null; // Search timed out
         }
         spt.add(initialState);
@@ -153,7 +153,7 @@ public class GenericAStar implements SPTService { // maybe this should be wrappe
                 // Returning null indicates something went wrong and search should be aborted.
                 // This is distinct from the empty list of paths which implies that a result may still
                 // be found by retrying with altered options (e.g. max walk distance)
-                options.rctx.debug.timedOut = true;
+                options.rctx.debugOutput.timedOut();
                 storeMemory();
                 return null; // throw timeout exception
             }
@@ -193,7 +193,7 @@ public class GenericAStar implements SPTService { // maybe this should be wrappe
             // TODO AMB: Replace isFinal with bicycle conditions in BasicPathParser
             }  else if (!options.batch && u_vertex == rctx.target && u.isFinal() && u.allPathParsersAccept()) {
                 targetAcceptedStates.add(u);
-                options.rctx.debug.foundPath();
+                options.rctx.debugOutput.foundPath();
                 if (targetAcceptedStates.size() >= nPaths) {
                     LOG.debug("total vertices visited {}", nVisited);
                     storeMemory();

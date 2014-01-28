@@ -108,6 +108,8 @@ public class PlanGenerator {
                 // Try again without slope restrictions (and warn user).
                 options.maxSlope = Double.MAX_VALUE;
                 options.maxWalkDistance = originalOptions.maxWalkDistance;
+                options.rctx.debugOutput.finishedCalculating();
+                options.rctx.debugOutput.startedCalculating();
                 paths = pathService.getPaths(options);
                 tooSloped = true;
             }
@@ -127,6 +129,8 @@ public class PlanGenerator {
                     backwardOptions.numItineraries = 1;
                     backwardOptions.maxWalkDistance = originalOptions.maxWalkDistance;
 
+                    options.rctx.debugOutput.finishedCalculating();
+                    options.rctx.debugOutput.startedCalculating();
                     List<GraphPath> backwardPaths = pathService.getPaths(backwardOptions);
                     if (backwardPaths == null || backwardPaths.size() < 1) {
                         LOG.error("A path could not be rediscovered backward. This implies a bug.");
@@ -145,6 +149,8 @@ public class PlanGenerator {
                 forwardOptions.numItineraries = 1;
                 forwardOptions.maxWalkDistance = originalOptions.maxWalkDistance;
 
+                options.rctx.debugOutput.finishedCalculating();
+                options.rctx.debugOutput.startedCalculating();
                 List<GraphPath> forwardPaths = pathService.getPaths(forwardOptions);
                 if (forwardPaths == null || forwardPaths.size() < 1) {
                     LOG.error("A path could not be rediscovered forward. This implies a bug.");
@@ -158,7 +164,7 @@ public class PlanGenerator {
             LOG.info("Vertex not found: " + options.getFrom() + " : " + options.getTo(), e);
             throw e;
         }
-        options.rctx.debug.finishedCalculating();
+        options.rctx.debugOutput.finishedCalculating();
 
         if (paths == null || paths.size() == 0) {
             LOG.info("Path not found: " + options.getFrom() + " : " + options.getTo());
@@ -192,7 +198,7 @@ public class PlanGenerator {
                 lastLeg.to.orig = plan.to.orig;
             }
         }
-        options.rctx.debug.finishedRendering();
+        options.rctx.debugOutput.finishedRendering();
         return plan;
     }
 
