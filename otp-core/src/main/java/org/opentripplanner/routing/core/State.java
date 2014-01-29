@@ -291,9 +291,7 @@ public class State implements Cloneable {
         if (isBikeRenting() != other.isBikeRenting())
             return false;
 
-        if (backEdge != other.getBackEdge() && ((backEdge instanceof PlainStreetEdge)
-                && (!((PlainStreetEdge) backEdge).getTurnRestrictions().isEmpty())))
-            return false;
+        if (backEdge != other.getBackEdge() && backEdge instanceof PlainStreetEdge) return false;
 
         if (this.similarRouteSequence(other)) {
             return this.weight <= other.weight &&
