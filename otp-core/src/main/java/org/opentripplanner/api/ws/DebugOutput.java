@@ -16,6 +16,9 @@ package org.opentripplanner.api.ws;
 import java.util.LinkedList;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Holds information to be included in the REST Response for debugging and profiling purposes.
  *
@@ -25,6 +28,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class DebugOutput {
+    private static final Logger LOG = LoggerFactory.getLogger(DebugOutput.class);
+
     private long finishedRendering;
 
     /* Results, public to cause JAX-RS serialization */
@@ -76,7 +81,7 @@ public class DebugOutput {
             debugOutputInstance.computeSummary();
             summaries.add(debugOutputInstance.pathTimes.toString());
         }
-        System.out.printf("%s\n", summaries);
+        LOG.debug("times to find each path: {}", summaries);
         renderingTime = finishedRendering - instances.getLast().finishedCalculating;
         totalTime = finishedRendering - instances.getFirst().startedCalculating;
     }
