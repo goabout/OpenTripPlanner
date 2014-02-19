@@ -84,16 +84,16 @@ public class TransitIndexServiceImpl implements TransitIndexService, Serializabl
 
     public TransitIndexServiceImpl(HashMap<AgencyAndId, List<Stop>> stopsByStation,
             HashMap<String, List<RouteVariant>> variantsByAgency,
-                                   HashMap<AgencyAndId, List<RouteVariant>> variantsByRoute,
-                                   HashMap<AgencyAndId, RouteVariant> variantsByTrip,
-                                   HashMap<AgencyAndId, PreBoardEdge> preBoardEdges,
-                                   HashMap<AgencyAndId, PreAlightEdge> preAlightEdges,
-                                   HashMap<AgencyAndId, TableTripPattern> tableTripPatternsByTrip,
-                                   HashMap<AgencyAndId, HashSet<String>> directionsByRoute,
-                                   HashMap<AgencyAndId, HashSet<Stop>> stopsByRoute,
-                                   HashMap<AgencyAndId, Route> routes,
-                                   HashMap<AgencyAndId, Stop> stops,
-                                   List<TraverseMode> modes) {
+            HashMap<AgencyAndId, List<RouteVariant>> variantsByRoute,
+            HashMap<AgencyAndId, RouteVariant> variantsByTrip,
+            HashMap<AgencyAndId, PreBoardEdge> preBoardEdges,
+            HashMap<AgencyAndId, PreAlightEdge> preAlightEdges,
+            HashMap<AgencyAndId, TableTripPattern> tableTripPatternsByTrip,
+            HashMap<AgencyAndId, HashSet<String>> directionsByRoute,
+            HashMap<AgencyAndId, HashSet<Stop>> stopsByRoute,
+            HashMap<AgencyAndId, Route> routes,
+            HashMap<AgencyAndId, Stop> stops,
+            List<TraverseMode> modes) {
         this.stopsByStation = stopsByStation;
         this.variantsByAgency = variantsByAgency;
         this.variantsByRoute = variantsByRoute;
@@ -110,16 +110,16 @@ public class TransitIndexServiceImpl implements TransitIndexService, Serializabl
 
     public void merge(HashMap<AgencyAndId, List<Stop>> stopsByStation,
             HashMap<String, List<RouteVariant>> variantsByAgency,
-                      HashMap<AgencyAndId, List<RouteVariant>> variantsByRoute,
-                      HashMap<AgencyAndId, RouteVariant> variantsByTrip,
-                      HashMap<AgencyAndId, PreBoardEdge> preBoardEdges,
-                      HashMap<AgencyAndId, PreAlightEdge> preAlightEdges,
-                      HashMap<AgencyAndId, TableTripPattern> tableTripPatternsByTrip,
-                      HashMap<AgencyAndId, HashSet<String>> directionsByRoute,
-                      HashMap<AgencyAndId, HashSet<Stop>> stopsByRoute,
-                      HashMap<AgencyAndId, Route> routes,
-                      HashMap<AgencyAndId, Stop> stops,
-                      List<TraverseMode> modes) {
+            HashMap<AgencyAndId, List<RouteVariant>> variantsByRoute,
+            HashMap<AgencyAndId, RouteVariant> variantsByTrip,
+            HashMap<AgencyAndId, PreBoardEdge> preBoardEdges,
+            HashMap<AgencyAndId, PreAlightEdge> preAlightEdges,
+            HashMap<AgencyAndId, TableTripPattern> tableTripPatternsByTrip,
+            HashMap<AgencyAndId, HashSet<String>> directionsByRoute,
+            HashMap<AgencyAndId, HashSet<Stop>> stopsByRoute,
+            HashMap<AgencyAndId, Route> routes,
+            HashMap<AgencyAndId, Stop> stops,
+            List<TraverseMode> modes) {
         MapUtils.mergeInUnique(this.stopsByStation, stopsByStation);
         MapUtils.mergeInUnique(this.variantsByAgency, variantsByAgency);
         MapUtils.mergeInUnique(this.variantsByRoute, variantsByRoute);

@@ -11,16 +11,22 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-package org.opentripplanner.routing.graph;
+/* this is in api.common so it can set package-private fields */
 
-/**
- * Seems to be used only in tests. As far as I know this is not used in normal routing (abyrd).
- */
-public class SimpleConcreteVertex extends Vertex {
+package org.opentripplanner.mmri;
 
-    private static final long serialVersionUID = 1L;
+import org.opentripplanner.api.model.Leg;
 
-    public SimpleConcreteVertex(Graph g, String label, double lat, double lon) {
-        super(g, label, lon, lat);
+public class FirstUnpreferredTransferTest extends MmriTest {
+    @Override
+    final String getFeedName() {
+        return "3g1";
+    }
+
+    public void test3g1() {
+        Leg[] legs = plan(+1388530860L, "3g11", "3g16", null, false, false, null, "", "", 2);
+
+        validateLeg(legs[0], 1388530860000L, 1388530980000L, "3g14", "3g11", null);
+        validateLeg(legs[1], 1388531040000L, 1388531100000L, "3g16", "3g14", null);
     }
 }
