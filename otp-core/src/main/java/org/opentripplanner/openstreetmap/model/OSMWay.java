@@ -74,8 +74,11 @@ public class OSMWay extends OSMWithTags {
      * @return
      */
     public boolean isRealtimeCapable() {
-    	String highway = getTag("highway");
-        return "motorway".equals(highway) || "secondary".equals(highway) || "primary".equals(highway) || "trunk".equals(highway);
+        String highway = getTag("highway");
+        return "motorway".equals(highway) || "motorway_link".equals(highway) ||
+                "trunk".equals(highway) || "trunk_link".equals(highway) ||
+                "primary".equals(highway) || "primary_link".equals(highway) ||
+                "secondary".equals(highway) || "secondary_link".equals(highway);
     }
 
     /**
