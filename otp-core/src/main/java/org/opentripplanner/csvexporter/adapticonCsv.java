@@ -24,8 +24,6 @@ public class adapticonCsv implements csvExporterInterface{
 			LOG.error("Adapticon folder doesnt exist. \n " +
 					"Please add the adapticon folder to "+ DEFAULT_EXPORTER_DIRECTORY + 
 					"directory \n and make sure it contains _adapticon.csv file(s)");
-		}
-		else{
 			return null;
 		}
 		
