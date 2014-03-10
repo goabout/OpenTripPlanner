@@ -61,8 +61,16 @@ class HttpCarSpeedsSource extends CarSpeedsSource {
             for (int i = 0; i < array.length; i++) {
                 ZipEntry zipEntry = zipInputStream.getNextEntry();
                 array[i] = new char[(int) zipEntry.getSize()];
+                byte bytes[] = new byte[array[i].length];
+                for (int j = 0, read; j < bytes.length; j += read) {
+                    read = zipInputStream.read(bytes, j, bytes.length - j);
+                    if (read < 1) {
+                        LOG.warn("Failed to parse dynamic car speed data due to end of zip entry.");
+                        return null;
+                    }
+                }
                 for (int j = 0; j < array[i].length; j++) {
-                    array[i][j] = (char) zipInputStream.read();
+                    array[i][j] = (char) bytes[j];
                 }
             }
 
