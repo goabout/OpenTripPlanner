@@ -49,11 +49,14 @@ class HttpCarSpeedsSource extends CarSpeedsSource {
 
     @Override
     public CarSpeeds getCarSpeeds() {
+        InputStream inputStream = null;
+        ZipInputStream zipInputStream = null;
+
         try {
             final char array[][] = new char[6][];
 
-            InputStream inputStream = HttpUtils.getData(url);
-            ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+            inputStream = HttpUtils.getData(url);
+            zipInputStream = new ZipInputStream(inputStream);
 
             for (int i = 0; i < array.length; i++) {
                 ZipEntry zipEntry = zipInputStream.getNextEntry();
@@ -63,15 +66,20 @@ class HttpCarSpeedsSource extends CarSpeedsSource {
                 }
             }
 
-            zipInputStream.close();
-            inputStream.close();
-
             return new CarSpeeds(new CharArrayReader(array[2]), new CharArrayReader(array[1]),
                     new CharArrayReader(array[0]), new CharArrayReader(array[5]),
                     new CharArrayReader(array[4]), new CharArrayReader(array[3]), timeZone);
         } catch (Exception e) {
             LOG.warn("Failed to parse dynamic car speed data:", e);
             return null;
+        } finally {
+            // We try to close all streams. If this should fail, there's nothing we can do about it.
+            try {
+                zipInputStream.close();
+            } catch (Exception e) {}
+            try {
+                inputStream.close();
+            } catch (Exception e) {}
         }
     }
 }

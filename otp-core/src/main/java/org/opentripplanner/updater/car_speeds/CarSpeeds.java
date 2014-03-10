@@ -43,18 +43,40 @@ public class CarSpeeds {
     CarSpeeds(Reader holidayData, Reader holidayRegionMappings, Reader freeFlowSpeedsMatrix,
             Reader normalSpeedsMatrix, Reader holidaySpeedsMatrix, Reader shortTermSpeedsMatrix,
             TimeZone timeZone) {
-        this.holidayData = new HolidayData(Holiday
-                .readHolidays(holidayData));
-        this.holidayRegionMappings = new HolidayRegionMappings(Segment
-                .readSegments(holidayRegionMappings));
-        this.freeFlowSpeedsMatrix = new FreeFlowSpeeds(Segment
-                .readSegments(freeFlowSpeedsMatrix));
-        this.normalSpeedsMatrix = new WeekSpeedsMatrix(WeekTimeSlotSpeedsArray
-                .readWeekTimeSlotSpeedsArrays(normalSpeedsMatrix), timeZone);
-        this.holidaySpeedsMatrix = new WeekSpeedsMatrix(WeekTimeSlotSpeedsArray
-                .readWeekTimeSlotSpeedsArrays(holidaySpeedsMatrix), timeZone);
-        this.shortTermSpeedsMatrix = new ShortTermSpeedsMatrix(ShortTermTimeSlotSpeedsArray
-                .readShortTermTimeSlotSpeedsArrays(shortTermSpeedsMatrix));
+        try {
+            this.holidayData = new HolidayData(Holiday
+                    .readHolidays(holidayData));
+            this.holidayRegionMappings = new HolidayRegionMappings(Segment
+                    .readSegments(holidayRegionMappings));
+            this.freeFlowSpeedsMatrix = new FreeFlowSpeeds(Segment
+                    .readSegments(freeFlowSpeedsMatrix));
+            this.normalSpeedsMatrix = new WeekSpeedsMatrix(WeekTimeSlotSpeedsArray
+                    .readWeekTimeSlotSpeedsArrays(normalSpeedsMatrix), timeZone);
+            this.holidaySpeedsMatrix = new WeekSpeedsMatrix(WeekTimeSlotSpeedsArray
+                    .readWeekTimeSlotSpeedsArrays(holidaySpeedsMatrix), timeZone);
+            this.shortTermSpeedsMatrix = new ShortTermSpeedsMatrix(ShortTermTimeSlotSpeedsArray
+                    .readShortTermTimeSlotSpeedsArrays(shortTermSpeedsMatrix));
+        } finally {
+            // We try to close all readers. If this should fail, there's nothing we can do about it.
+            try {
+                shortTermSpeedsMatrix.close();
+            } catch (Exception e) {}
+            try {
+                holidaySpeedsMatrix.close();
+            } catch (Exception e) {}
+            try {
+                normalSpeedsMatrix.close();
+            } catch (Exception e) {}
+            try {
+                freeFlowSpeedsMatrix.close();
+            } catch (Exception e) {}
+            try {
+                holidayRegionMappings.close();
+            } catch (Exception e) {}
+            try {
+                holidayData.close();
+            } catch (Exception e) {}
+        }
     }
 
     public float getCarSpeed(long timestamp, int segment) {
