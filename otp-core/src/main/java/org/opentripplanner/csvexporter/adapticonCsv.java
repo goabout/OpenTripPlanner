@@ -103,6 +103,7 @@ public class adapticonCsv implements csvExporterInterface{
 				}
 				
 				File adapticonOutput = new File(DEFAULT_EXPORTER_DIRECTORY+"/adapticon/output/"+CsvExporter.getDateTime());
+				adapticonOutput.getParentFile().mkdirs();
 				csvWriter csvwrite = new csvWriter(adapticonOutput);			
 												
 				for(String item: intIdadapticon){			

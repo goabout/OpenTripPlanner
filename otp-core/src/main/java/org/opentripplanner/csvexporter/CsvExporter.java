@@ -21,12 +21,10 @@ public class CsvExporter implements csvExporterInterface  {
 	
 	private String dateTime = null;
 	private File timestampDirectory = null;	
-	private final GraphService graphService;
 	private final Graph graph;
 	private csvWriter writer = null;
 
 	public CsvExporter(GraphService graphService) {
-		this.graphService = graphService;
 		this.graph = graphService.getGraph();
 		//get the name time stamp directory
 		this.dateTime = getDateTime();		
