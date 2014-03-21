@@ -548,9 +548,7 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
             if (carSpeeds != null) {
                 double speed = carSpeeds.getCarSpeed(timestamp, segmentId, type);
 
-                if (speed <= 0) {
-                    return 0;
-                } else if (!(Double.isNaN(speed))) {
+                if (speed >= 0) {
                     long offset = 1000L * (long) Math.ceil(length / speed);
 
                     if (isSameTimeSlot(timestamp, offset, arriveBy)) {

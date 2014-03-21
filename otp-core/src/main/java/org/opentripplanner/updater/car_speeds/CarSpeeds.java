@@ -82,14 +82,14 @@ public class CarSpeeds {
     public float getCarSpeed(long timestamp, int segment, int type) {
         float speed = type > 2 ? shortTermSpeedsMatrix.getCarSpeed(timestamp, segment) : Float.NaN;
 
-        if (Float.isNaN(speed)) {
+        if (Float.isNaN(speed) || speed == -1) {        // -1 means missing data
             Region region = type > 1 ? holidayRegionMappings.getRegion(segment) : null;
             if (region != null) {
                 speed = holidayData.isHoliday(region, timestamp) ?
                         holidaySpeedsMatrix.getCarSpeed(timestamp, segment) :
                         normalSpeedsMatrix.getCarSpeed(timestamp, segment);
             }
-            if (Float.isNaN(speed)) {
+            if (Float.isNaN(speed) || speed == -1) {    // -1 means missing data
                 speed = type > 0 ? freeFlowSpeedsMatrix.getCarSpeed(timestamp, segment) : Float.NaN;
             }
         }
