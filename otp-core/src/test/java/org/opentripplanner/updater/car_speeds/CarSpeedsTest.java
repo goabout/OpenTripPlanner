@@ -62,11 +62,11 @@ public class CarSpeedsTest {
         CarSpeeds carSpeeds = mock(CarSpeeds.class);
 
         when(graph.getCarSpeeds()).thenReturn(carSpeeds);
-        when(carSpeeds.getCarSpeed(0L, 1)).thenReturn(1.0F);
-        when(carSpeeds.getCarSpeed(300000L, 1)).thenReturn(2.0F);
-        when(carSpeeds.getCarSpeed(600000L, 1)).thenReturn(3.0F);
-        when(carSpeeds.getCarSpeed(900000L, 1)).thenReturn(4.0F);
-        when(carSpeeds.getCarSpeed(1200000L, 1)).thenReturn(5.0F);
+        when(carSpeeds.getCarSpeed(0L, 1, Integer.MAX_VALUE)).thenReturn(1.0F);
+        when(carSpeeds.getCarSpeed(300000L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);
+        when(carSpeeds.getCarSpeed(600000L, 1, Integer.MAX_VALUE)).thenReturn(3.0F);
+        when(carSpeeds.getCarSpeed(900000L, 1, Integer.MAX_VALUE)).thenReturn(4.0F);
+        when(carSpeeds.getCarSpeed(1200000L, 1, Integer.MAX_VALUE)).thenReturn(5.0F);
 
         PlainStreetEdge edge = new PlainStreetEdge(
                 v0, v1, lineString, "Edge", 4321.0, StreetTraversalPermission.ALL, false, 1);
@@ -96,10 +96,10 @@ public class CarSpeedsTest {
         CarSpeeds carSpeeds = mock(CarSpeeds.class);
 
         when(graph.getCarSpeeds()).thenReturn(carSpeeds);
-        when(carSpeeds.getCarSpeed(0L, 1)).thenReturn(2.0F);
-        when(carSpeeds.getCarSpeed(299000L, 1)).thenReturn(2.0F);
-        when(carSpeeds.getCarSpeed(300000L, 1)).thenReturn(1.0F);
-        when(carSpeeds.getCarSpeed(301000L, 1)).thenReturn(1.0F);
+        when(carSpeeds.getCarSpeed(0L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);
+        when(carSpeeds.getCarSpeed(299000L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);
+        when(carSpeeds.getCarSpeed(300000L, 1, Integer.MAX_VALUE)).thenReturn(1.0F);
+        when(carSpeeds.getCarSpeed(301000L, 1, Integer.MAX_VALUE)).thenReturn(1.0F);
 
         PlainStreetEdge edge = new PlainStreetEdge(
                 v0, v1, lineString, "Edge", 2.0, StreetTraversalPermission.ALL, false, 1);
@@ -136,9 +136,9 @@ public class CarSpeedsTest {
         CarSpeeds carSpeeds = mock(CarSpeeds.class);
 
         when(graph.getCarSpeeds()).thenReturn(carSpeeds);
-        when(carSpeeds.getCarSpeed(299000L, 1)).thenReturn(1.0F);
-        when(carSpeeds.getCarSpeed(300000L, 1)).thenReturn(2.0F);
-        when(carSpeeds.getCarSpeed(301000L, 1)).thenReturn(2.0F);
+        when(carSpeeds.getCarSpeed(299000L, 1, Integer.MAX_VALUE)).thenReturn(1.0F);
+        when(carSpeeds.getCarSpeed(300000L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);
+        when(carSpeeds.getCarSpeed(301000L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);
 
         PlainStreetEdge edge = new PlainStreetEdge(
                 v0, v1, lineString, "Edge", 2.0, StreetTraversalPermission.ALL, false, 1);

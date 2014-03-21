@@ -79,18 +79,18 @@ public class CarSpeeds {
         }
     }
 
-    public float getCarSpeed(long timestamp, int segment) {
-        float speed = shortTermSpeedsMatrix.getCarSpeed(timestamp, segment);
+    public float getCarSpeed(long timestamp, int segment, int type) {
+        float speed = type > 2 ? shortTermSpeedsMatrix.getCarSpeed(timestamp, segment) : Float.NaN;
 
         if (Float.isNaN(speed)) {
-            Region region = holidayRegionMappings.getRegion(segment);
+            Region region = type > 1 ? holidayRegionMappings.getRegion(segment) : null;
             if (region != null) {
                 speed = holidayData.isHoliday(region, timestamp) ?
                         holidaySpeedsMatrix.getCarSpeed(timestamp, segment) :
                         normalSpeedsMatrix.getCarSpeed(timestamp, segment);
             }
             if (Float.isNaN(speed)) {
-                speed = freeFlowSpeedsMatrix.getCarSpeed(timestamp, segment);
+                speed = type > 0 ? freeFlowSpeedsMatrix.getCarSpeed(timestamp, segment) : Float.NaN;
             }
         }
 

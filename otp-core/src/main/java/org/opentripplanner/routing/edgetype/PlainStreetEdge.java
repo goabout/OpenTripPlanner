@@ -508,13 +508,13 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
      * (semi-continuous) versus longs (uniformly discrete). Unfortunately, this makes the code ugly.
      */
     private double calculateCompositeCarSpeed(long timestamp, CarSpeeds carSpeeds,
-            boolean arriveBy) {
+            boolean arriveBy, int type) {
         double distance = 0;
         long time = timestamp;
 
         while (distance < length) {
             long nextTime = calculateNextTime(time, arriveBy);
-            double speed = carSpeeds.getCarSpeed(arriveBy ? nextTime : time, segmentId);
+            double speed = carSpeeds.getCarSpeed(arriveBy ? nextTime : time, segmentId, type);
             double extraDistance = speed * Math.abs(time - nextTime) * .001;
 
             if (!(extraDistance > 0)) { // If extraDistance is NaN, extraDistance > 0 is also false.
@@ -541,12 +541,12 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
      * and the RoutingContext, and return it in meters per second.
      */
     private double calculateCarSpeed(long timestamp, RoutingContext routingContext,
-            boolean arriveBy) {
+            boolean arriveBy, int type) {
         if (routingContext != null) {
             final CarSpeeds carSpeeds = routingContext.carSpeedsSnapshot;
 
             if (carSpeeds != null) {
-                double speed = carSpeeds.getCarSpeed(timestamp, segmentId);
+                double speed = carSpeeds.getCarSpeed(timestamp, segmentId, type);
 
                 if (speed <= 0) {
                     return 0;
@@ -556,7 +556,7 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
                     if (isSameTimeSlot(timestamp, offset, arriveBy)) {
                         return speed;
                     } else {
-                        return calculateCompositeCarSpeed(timestamp, carSpeeds, arriveBy);
+                        return calculateCompositeCarSpeed(timestamp, carSpeeds, arriveBy, type);
                     }
                 }
             }
@@ -577,7 +577,8 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
 
         if (traverseMode.isDriving()) {
             if (segmentId > 0) {
-                speed = calculateCarSpeed(state.getTimeInMillis(), options.rctx, options.arriveBy);
+                speed = calculateCarSpeed(state.getTimeInMillis(), options.rctx, options.arriveBy,
+                        options.dynamicCarSpeedType);
             } else {
                 speed = carSpeed;
             }
