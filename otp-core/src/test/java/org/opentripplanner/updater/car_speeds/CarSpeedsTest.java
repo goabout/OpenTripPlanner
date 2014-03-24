@@ -82,7 +82,7 @@ public class CarSpeedsTest {
     }
 
     @Test
-    public final void testBackwardToForWard() {
+    public final void testBackwardToForward() {
         State arrive, depart;
         RoutingRequest routingRequest = new RoutingRequest(TraverseMode.CAR);
         GeometryFactory geometryFactory = new GeometryFactory();
@@ -122,7 +122,7 @@ public class CarSpeedsTest {
     }
 
     @Test
-    public final void testForwardToBackWard() {
+    public final void testForwardToBackward() {
         State arrive, depart;
         RoutingRequest routingRequest = new RoutingRequest(TraverseMode.CAR);
         GeometryFactory geometryFactory = new GeometryFactory();
@@ -250,12 +250,32 @@ public class CarSpeedsTest {
         routingRequest.dateTime = 1200L;
         depart = new State(routingRequest);
         arrive = edge.traverse(depart);
-        assertEquals(1203000L, arrive.getTimeInMillis());
+        assertEquals(1205000L, arrive.getTimeInMillis());
 
-        routingRequest.dateTime = 1497L;
+        routingRequest.dateTime = 1495L;
         depart = new State(routingRequest);
         arrive = edge.traverse(depart);
         assertEquals(1500000L, arrive.getTimeInMillis());
+
+        routingRequest.dateTime = 1500L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(1506000L, arrive.getTimeInMillis());
+
+        routingRequest.dateTime = 1794L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(1800000L, arrive.getTimeInMillis());
+
+        routingRequest.dateTime = 1800L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(1803000L, arrive.getTimeInMillis());
+
+        routingRequest.dateTime = 2097L;
+        depart = new State(routingRequest);
+        arrive = edge.traverse(depart);
+        assertEquals(2100000L, arrive.getTimeInMillis());
 
         routingRequest.ignoreRealtimeUpdates = true;
         assertNotNull(routingRequest.rctx.carSpeedsSnapshot);

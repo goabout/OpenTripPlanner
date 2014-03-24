@@ -22,26 +22,27 @@ import java.util.TimeZone;
 import org.opentripplanner.util.DateUtils;
 
 class ShortTermSpeedsMatrix extends SpeedsMatrix {
-    private final long startTime;
+    private final long times[];
     private final float carSpeeds[][];
 
     ShortTermSpeedsMatrix(ShortTermTimeSlotSpeedsArray[] shortTermTimeSlotSpeedsArrays) {
-        final String dateString = shortTermTimeSlotSpeedsArrays[0].yearUtc + '.' +
-                shortTermTimeSlotSpeedsArrays[0].monthUtc + '.' +
-                shortTermTimeSlotSpeedsArrays[0].monthdayUtc;
-        final String timeString = shortTermTimeSlotSpeedsArrays[0].hourUtc + ':' +
-                shortTermTimeSlotSpeedsArrays[0].minuteUtc;
-
-        final Date date = DateUtils.toDate(dateString, timeString, TimeZone.getTimeZone("UTC"));
-        if (date == null) {
-            throw new RuntimeException("A date/time specification could not be parsed correctly.");
-        }
-
-        startTime = date.getTime();
+        times = new long[shortTermTimeSlotSpeedsArrays.length];
         carSpeeds = new float[shortTermTimeSlotSpeedsArrays.length]
                 [shortTermTimeSlotSpeedsArrays[0].speedsKmh.length];
 
         for (int i = 0; i < carSpeeds.length; i++) {
+            final String dateString = shortTermTimeSlotSpeedsArrays[i].yearUtc + '.' +
+                    shortTermTimeSlotSpeedsArrays[i].monthUtc + '.' +
+                    shortTermTimeSlotSpeedsArrays[i].monthdayUtc;
+            final String timeString = shortTermTimeSlotSpeedsArrays[i].hourUtc + ':' +
+                    shortTermTimeSlotSpeedsArrays[i].minuteUtc;
+
+            final Date date = DateUtils.toDate(dateString, timeString, TimeZone.getTimeZone("UTC"));
+            if (date == null) throw new RuntimeException(
+                    "A date/time specification could not be parsed correctly.");
+
+            times[i] = date.getTime();
+
             for (int j = 0; j < carSpeeds[i].length; j++) {
                 carSpeeds[i][j] =
                         Float.parseFloat(shortTermTimeSlotSpeedsArrays[i].speedsKmh[j]) * KM_H;
@@ -50,26 +51,14 @@ class ShortTermSpeedsMatrix extends SpeedsMatrix {
     }
 
     float getCarSpeed(long timestamp, int segment, int day, int hour, int minute) {
-        final int index = floorDiv((timestamp - startTime), TIME_SLOT);
-        if (index < 0 || index >= carSpeeds.length) return Float.NaN;
-        if (segment < 1 || segment > carSpeeds[index].length) return Float.NaN;
-        return carSpeeds[index][segment - 1];
-    }
-
-    /**
-     * Divide two integers, rounding towards negative infinity. A similar method will show up in JDK
-     * 1.8, but in the meantime we will (unfortunately) just have to use this special case solution.
-     * @param dividend The dividend, which can be any long.
-     * @param divisor The divisor, which must be positive at all times.
-     * @return The quotient converted to an int. Preventing overflow is the caller's responsibility.
-     */
-    private static int floorDiv(long dividend, long divisor) {
-        if (divisor < 1) throw new ArithmeticException("All floorDiv() calls require divisor > 0.");
-
-        if (dividend < 0) {
-            dividend -= divisor - 1;
+        final int last = times.length - 1;
+        if (timestamp < times[0] || timestamp >= times[last] + TIME_SLOT) return Float.NaN;
+        if (segment < 1 || segment > carSpeeds[last].length) return Float.NaN;
+        float speed = carSpeeds[0][segment - 1];
+        for (int i = 1; i < times.length; i++) {
+            if (timestamp < times[i]) return speed;
+            speed = carSpeeds[i][segment - 1];
         }
-
-        return (int) (dividend / divisor);
+        return carSpeeds[last][segment - 1];
     }
 }
