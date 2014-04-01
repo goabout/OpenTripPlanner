@@ -266,6 +266,16 @@ public abstract class RoutingResource {
     protected List<Boolean> ignoreRealtimeUpdates;
 
     /**
+     * The type of dynamic car speed data requested by the user. Higher numbers mean more sources.
+     * 0: Do not use dynamic car speed data.
+     * 1: Use only the free flow speed data.
+     * 2: Also use the (normal and holiday) week speed data.
+     * 3: Also use the short term speed data.
+     */
+    @QueryParam("dynamicCarSpeedType")
+    protected List<Integer> dynamicCarSpeedType;
+
+    /**
      * If true, the remaining weight heuristic is disabled. Currently only implemented for the long
      * distance path service.
      */
@@ -445,6 +455,9 @@ public abstract class RoutingResource {
 
         request.setIgnoreRealtimeUpdates(get(ignoreRealtimeUpdates, n, 
                 request.isIgnoreRealtimeUpdates()));
+
+        request.setDynamicCarSpeedType(get(dynamicCarSpeedType, n,
+                request.getDynamicCarSpeedType()));
 
         request.setDisableRemainingWeightHeuristic(get(disableRemainingWeightHeuristic, n,
                 request.isDisableRemainingWeightHeuristic()));

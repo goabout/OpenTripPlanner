@@ -136,6 +136,10 @@ public class CommandLineParameters {
     description = "open a debugging graph visualizer")
     boolean visualize;
 
+    @Parameter( names = { "-y", "--csvexport"},
+    description = "making a graph csvexport")
+    boolean csvexport;
+
     @Parameter( validateWith = ReadableFile.class, // the remaining parameters in one array
     description = "files") 
     List<File> files = new ArrayList<File>();

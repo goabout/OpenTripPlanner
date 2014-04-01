@@ -75,7 +75,7 @@ otp.modules.planner.PlannerModule =
     triangleSlopeFactor     : 0.333,
     triangleSafetyFactor    : 0.334,
     */
-    
+
     startName       : null,
     endName         : null,
     startLatLng     : null,
@@ -83,12 +83,12 @@ otp.modules.planner.PlannerModule =
 
     // the defaults params, as modified in the module-specific config
     defaultQueryParams  : null,
-    
+
     startTimePadding    : 0,
     
     // copy of query param set from last /plan request
     lastQueryParams : null,
-    
+
     icons       : null,
 
     //templateFile : 'otp/modules/planner/planner-templates.html',
