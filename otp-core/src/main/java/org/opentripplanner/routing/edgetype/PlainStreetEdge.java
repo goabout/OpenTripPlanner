@@ -715,4 +715,11 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
         return super.detachFrom();
     }
 
+    public float getDynamicCarSpeed(CarSpeeds snapshot, long timestamp, int type) {
+        if (snapshot != null && type > 0 && segmentId > 0) {
+            return snapshot.getCarSpeed(timestamp, segmentId, type);
+        }
+
+        return Float.NaN;
+    }
 }

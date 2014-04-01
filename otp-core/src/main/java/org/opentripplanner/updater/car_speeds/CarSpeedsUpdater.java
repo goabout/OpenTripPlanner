@@ -15,6 +15,7 @@ package org.opentripplanner.updater.car_speeds;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.prefs.Preferences;
 
 import org.opentripplanner.routing.edgetype.PlainStreetEdge;
@@ -65,6 +66,7 @@ public class CarSpeedsUpdater extends PollingGraphUpdater {
         if (segmentMapping != null) {
             File file = new File(segmentMapping);
             Segment[] array = Segment.readSegments(new FileReader(file));
+            ArrayList<PlainStreetEdge> dynamicCarSpeeds = new ArrayList<PlainStreetEdge>();
 
             for (Segment segment : array) {
                 String segmentId = segment.id;
@@ -78,7 +80,11 @@ public class CarSpeedsUpdater extends PollingGraphUpdater {
 
                 PlainStreetEdge plainStreetEdge = (PlainStreetEdge) edge;
                 plainStreetEdge.setSegmentId(Integer.parseInt(segmentId));
+                dynamicCarSpeeds.add(plainStreetEdge);
             }
+
+            dynamicCarSpeeds.trimToSize();
+            graph.setDynamicCarSpeeds(dynamicCarSpeeds);
         }
 
         // Create update streamer from preferences

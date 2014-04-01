@@ -58,6 +58,7 @@ import org.opentripplanner.gbannotation.NoFutureDates;
 import org.opentripplanner.model.GraphBundle;
 import org.opentripplanner.routing.core.MortonVertexComparatorFactory;
 import org.opentripplanner.routing.core.TransferTable;
+import org.opentripplanner.routing.edgetype.PlainStreetEdge;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.edgetype.TableTripPattern;
 import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
@@ -130,6 +131,10 @@ public class Graph implements Serializable {
     @Getter(onMethod=@_({@Synchronized("carSpeedsLock")}))
     @Setter(onMethod=@_({@Synchronized("carSpeedsLock")}))
     private transient volatile CarSpeeds carSpeeds;
+
+    @Getter
+    @Setter
+    private transient volatile List<PlainStreetEdge> dynamicCarSpeeds;
 
     private transient List<GraphBuilderAnnotation> graphBuilderAnnotations = new LinkedList<GraphBuilderAnnotation>(); // initialize for tests
 
