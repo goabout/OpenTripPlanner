@@ -1,7 +1,6 @@
 package org.opentripplanner.csvexporter;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import com.google.common.io.Files;
@@ -54,7 +53,7 @@ public class adapticonCsv implements csvExporterInterface{
 		
 		//read latest uploaded externalids csv
 		csvFiles csvfile = new csvFiles();
-		File latestUpcsv = csvfile.getLastUplodedcsv();
+		File latestUpcsv = csvfile.getLatestcsv();
 		if(latestUpcsv== null){
 			LOG.error("Adapticon folder doesnt exist. \n " +
 					"Please add the adapticon folder to "+ DEFAULT_EXPORTER_DIRECTORY + 
