@@ -91,7 +91,8 @@ public class OTPMain {
             }
         }
 
-        if (graphBuilder==null && graphVisualizer==null && grizzlyServer==null) {
+        if (graphBuilder == null && graphVisualizer == null && grizzlyServer == null &&
+                csvExporter==null) {
             LOG.info("Nothing to do. Use --help to see available tasks.");
         }
     }
