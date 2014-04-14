@@ -34,25 +34,25 @@ public class CsvExporter implements csvExporterInterface  {
 
 	public void run() {
 		LOG.info("Run CsvExporter");				
-		this.addVertextoCsv(this.graph.getVertices());
-		this.addEdgestoCsv(this.graph.getEdges());
-		this.addExternalandOtpidToCsv(this.graph.getEdges());
+		this.addVertexToCSV(this.graph.getVertices());
+		this.addEdgesToCSV(this.graph.getEdges());
+		this.addExternalandOTPIdsToCSV(this.graph.getEdges());
 		
 		// after writing the new CSV file we compute the percentage of
 		// difference between latest uploaded and the new CSV files		
 		csvDiff csvdiff =new csvDiff();
-		ArrayList<String> diffEdge = csvdiff.computeEdgediff();
-		if(diffEdge != null){		
-			float percentage = ((float)(diffEdge.size() / (float)csvdiff.dataLatestuploadedCsv.get(0).size()) * 100);		
-			String s = String.format("%.2f",percentage);
-			LOG.info("Percentage of edge changes from the last uploaded edge : "+ s);				
-			LOG.info("Number of edges added :"+diffEdge.size());
+		int[] result = csvdiff.computeEdgeDiff();
+
+		if(result != null){					
+			LOG.info("Number of edges in the old graph and not in new graph: "+ result[0]);
+			LOG.info("Number of edges in the new graph and not in old graph : "+ result[1]);		
+			LOG.info("Number of edges in common (both new and old grpahs): " + result[2]);					
 		}
 		adapticonCsv adapticon = new adapticonCsv();
 		adapticon.createAdapticoncsv();
 	}
 
-	public void addVertextoCsv(Collection<Vertex> vertices) {
+	public void addVertexToCSV(Collection<Vertex> vertices) {
 		LOG.info("adding vertices....");
 		//check if the directory exists();
 		if (!this.timestampDirectory.exists()){			
@@ -63,15 +63,15 @@ public class CsvExporter implements csvExporterInterface  {
 			Vertex vertex = (Vertex) iterator.next();
 
 			// check if the vertex is real time capable
-			if(isVertexRealtimeCapable(vertex)){						
-				String hashCode = generateVertexexternalId(vertex);
+			if(isVertexRealTimeCapable(vertex)){						
+				String hashCode = generateVertExternalId(vertex);
 				this.writer.write(hashCode,vertex.getX(), vertex.getY());
 			}
 		}		
-		LOG.info("Done adding vertices");	
+		LOG.info("Done adding vertices to CSV");	
 	}
 
-	public void addEdgestoCsv(Collection<Edge> edges) {
+	public void addEdgesToCSV(Collection<Edge> edges) {
 		LOG.info("adding edges....");
 
 		//check if the directory exists();
@@ -89,18 +89,18 @@ public class CsvExporter implements csvExporterInterface  {
 				}
 				Vertex vertexFrom = edge.getFromVertex();
 				Vertex vertexTo = edge.getToVertex();			
-				String vertexFromhashCode = generateVertexexternalId(vertexFrom);
-				String vertexTohashCode = generateVertexexternalId(vertexTo);							
+				String vertexFromhashCode = generateVertExternalId(vertexFrom);
+				String vertexTohashCode = generateVertExternalId(vertexTo);							
 				LineString l = edge.getGeometry();												
 				String shape = l.toString();				
-				String edgeHashcode = generateEdgeexternalId(edge,shape);
+				String edgeHashcode = generateEdgeExternalId(edge,shape);
 				this.writer.write(edgeHashcode,vertexFromhashCode,vertexTohashCode,shape);				
 			}
 		}
 		LOG.info("Done adding edges");
 	}
 
-	public void addExternalandOtpidToCsv(Collection<Edge> edges) {
+	public void addExternalandOTPIdsToCSV(Collection<Edge> edges) {
 		LOG.info("adding external ids....");
 
 		//check if the directory exists();
@@ -117,15 +117,14 @@ public class CsvExporter implements csvExporterInterface  {
 				int internal_id = edge.getId();
 				LineString l = edge.getGeometry();												
 				String shape = l.toString();				
-				String external_id = generateEdgeexternalId(edge,shape);
+				String external_id = generateEdgeExternalId(edge,shape);
 				this.writer.write(external_id, Integer.toString(internal_id));
 			}
 		}
 		LOG.info("Done adding external ids");
 	}
 
-	public boolean isVertexRealtimeCapable(Vertex vertex){
-
+	public boolean isVertexRealTimeCapable(Vertex vertex){
 		//check for real time vertices
 		if(vertex.getIncoming()!=null || vertex.getOutgoing()!=null){
 			Collection<Edge> incomingEdges = vertex.getIncoming();
@@ -160,22 +159,23 @@ public class CsvExporter implements csvExporterInterface  {
 		}
 	}
 	
-	public String generateVertexexternalId(Vertex v){
+	public String generateVertExternalId(Vertex v){
 		String row = Double.toString(v.getX())+Double.toString(v.getY());		
 		return hashCode(row);		
 	}
 	
-	/**generates external id based on the from vertex, to vertex and shape of the edge
+	/**generates external id based on the from vertex and to vertex 
 	 * @param edge
 	 * @return external id 
 	 */
-	public String generateEdgeexternalId(Edge edge, String shape) {
+	public String generateEdgeExternalId(Edge edge, String shape) {
 		Vertex vertexFrom = edge.getFromVertex();
 		Vertex vertexTo = edge.getToVertex();
-		int vertexFromhashCode = vertexFrom.hashCode();
-		int vertexTohashCode = vertexTo.hashCode();		
+		String vertexFromhashCode = generateVertExternalId(vertexFrom);
+		String vertexTohashCode = generateVertExternalId(vertexTo);		
 
-		String edgeRowstring = Integer.toString(vertexFromhashCode)+Integer.toString(vertexTohashCode)+shape;  					
+		//String edgeRowstring = Integer.toString(vertexFromhashCode)+Integer.toString(vertexTohashCode)+shape;
+		String edgeRowstring = vertexFromhashCode + vertexTohashCode;
 		String edgeHashcode = hashCode(edgeRowstring);
 		return edgeHashcode;
 	}
