@@ -3,9 +3,7 @@ package org.opentripplanner.csvexporter;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
-
-import org.opentripplanner.routing.graph.Vertex;
+import java.util.Collections;
 
 public class csvDiff  implements csvExporterInterface{
 	
@@ -91,8 +89,6 @@ public class csvDiff  implements csvExporterInterface{
 		int number_of_edges_only_in_old_graph = 0;
 		int[] result = new int[3];
 
-		ArrayList<String> diff = new ArrayList<String>();
-
 		if (latestCsv != null) {
 			{
 				File vertexFile = new File(latestCsv.getAbsolutePath() + "/"
@@ -123,25 +119,35 @@ public class csvDiff  implements csvExporterInterface{
 		}	
 		
 		try {
-			Collection<String> commonEdges = new ArrayList<String>();
-			
-			Collection<String> dataNewlist = dataLatestcsv.get(0);
-			Collection<String> dataOldlist = dataLatestuploadedCsv.get(0);			
-			
-			
-			Collection<String> temp = new ArrayList<String>();
-			LOG.info("Computing the differences between old and new grpah.....");
-			for (Iterator<String> iterator = dataNewlist.iterator(); iterator
-					.hasNext();) {
-				String s = iterator.next();
-				if (dataOldlist.contains(s)){
-					commonEdges.add(s);
-				}
-			}
-						
-			number_of_edges_both_graphs = commonEdges.size();
-			number_of_edges_only_in_new_graph = dataNewlist.size() - commonEdges.size();
-			number_of_edges_only_in_old_graph = dataOldlist.size() - commonEdges.size();		
+            int i = 0, j = 0;
+            ArrayList<String> dataNewList = dataLatestcsv.get(0);
+            ArrayList<String> dataOldList = dataLatestuploadedCsv.get(0);
+
+            LOG.info("Computing the differences between old and new graph.....");
+            Collections.sort(dataNewList);
+            Collections.sort(dataOldList);
+
+            while (i < dataNewList.size() && j < dataOldList.size()) {
+                int compare = dataNewList.get(i).compareTo(dataOldList.get(j));
+                if (compare > 0) {
+                    number_of_edges_only_in_old_graph++;
+                    j++;
+                } else if (compare < 0) {
+                    number_of_edges_only_in_new_graph++;
+                    i++;
+                } else {
+                    number_of_edges_both_graphs++;
+                    i++;
+                    j++;
+                }
+            }
+
+            if (i < dataNewList.size()) {
+                number_of_edges_only_in_new_graph += dataNewList.size() - i;
+            } else if (j < dataOldList.size()) {
+                number_of_edges_only_in_old_graph += dataOldList.size() - j;
+            }
+
 			result[0] = number_of_edges_only_in_old_graph;
 			result[1] = number_of_edges_only_in_new_graph;
 			result[2] = number_of_edges_both_graphs;
