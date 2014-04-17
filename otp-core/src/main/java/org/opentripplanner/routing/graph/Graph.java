@@ -43,6 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Synchronized;
 
 import org.onebusaway.gtfs.impl.calendar.CalendarServiceImpl;
 import org.onebusaway.gtfs.model.Agency;
@@ -57,6 +58,7 @@ import org.opentripplanner.gbannotation.NoFutureDates;
 import org.opentripplanner.model.GraphBundle;
 import org.opentripplanner.routing.core.MortonVertexComparatorFactory;
 import org.opentripplanner.routing.core.TransferTable;
+import org.opentripplanner.routing.edgetype.PlainStreetEdge;
 import org.opentripplanner.routing.edgetype.StreetEdge;
 import org.opentripplanner.routing.edgetype.TableTripPattern;
 import org.opentripplanner.routing.impl.DefaultStreetVertexIndexFactory;
@@ -65,6 +67,7 @@ import org.opentripplanner.routing.services.StreetVertexIndexService;
 import org.opentripplanner.routing.vertextype.PatternArriveVertex;
 import org.opentripplanner.updater.GraphUpdaterConfigurator;
 import org.opentripplanner.updater.GraphUpdaterManager;
+import org.opentripplanner.updater.car_speeds.CarSpeeds;
 import org.opentripplanner.updater.stoptime.TimetableSnapshotSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,6 +124,17 @@ public class Graph implements Serializable {
     @Getter
     @Setter
     private transient TimetableSnapshotSource timetableSnapshotSource = null;
+
+    // Use Lombok to ensure thread-safety of carSpeeds object.
+    private final Object carSpeedsLock[] = new Object[0];
+
+    @Getter(onMethod=@_({@Synchronized("carSpeedsLock")}))
+    @Setter(onMethod=@_({@Synchronized("carSpeedsLock")}))
+    private transient volatile CarSpeeds carSpeeds;
+
+    @Getter
+    @Setter
+    private transient volatile List<PlainStreetEdge> dynamicCarSpeeds;
 
     private transient List<GraphBuilderAnnotation> graphBuilderAnnotations = new LinkedList<GraphBuilderAnnotation>(); // initialize for tests
 

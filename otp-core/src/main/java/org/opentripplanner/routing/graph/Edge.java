@@ -46,7 +46,7 @@ public abstract class Edge implements Serializable {
     /**
      * Generates globally unique edge IDs.
      */
-    private static final UniqueIdGenerator<Edge> idGenerator = new IncrementingIdGenerator<Edge>();
+    private static UniqueIdGenerator<Edge> idGenerator = new IncrementingIdGenerator<Edge>();
 
     /**
      * Identifier of the edge. Negative means not set.
@@ -195,6 +195,13 @@ public abstract class Edge implements Serializable {
      * Edges are not roundabouts by default.
      */
     public boolean isRoundabout() {
+        return false;
+    }
+    
+    /**
+     * Edges are not real-time capable by default
+     */
+    public boolean isRealtimeCapable() {
         return false;
     }
 
@@ -357,4 +364,11 @@ public abstract class Edge implements Serializable {
         }
     }
 
+    /**
+     * WARNING, DANGEROUS CODE: This method resets the class's static state (i.e. the id generator).
+     * This kills uniqueness, so every time you use this method outside of any tests, a kitten dies.
+     */
+    public static void reset() {
+        idGenerator = new IncrementingIdGenerator<Edge>();
+    }
 }

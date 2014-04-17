@@ -13,6 +13,8 @@
 
 package org.opentripplanner.routing.edgetype;
 
+import static org.opentripplanner.updater.car_speeds.CarSpeeds.TIME_SLOT;
+
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import org.opentripplanner.common.TurnRestriction;
 import org.opentripplanner.common.TurnRestrictionType;
 import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.common.geometry.PackedCoordinateSequence;
+import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
 import org.opentripplanner.routing.core.StateEditor;
@@ -38,6 +41,7 @@ import org.opentripplanner.routing.util.ElevationProfileSegment;
 import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
 import org.opentripplanner.routing.vertextype.StreetVertex;
+import org.opentripplanner.updater.car_speeds.CarSpeeds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +58,7 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
 
     private static Logger LOG = LoggerFactory.getLogger(PlainStreetEdge.class); 
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 20131211L;
 
     private static final double GREENWAY_SAFETY_FACTOR = 0.1;
 
@@ -91,6 +95,9 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
     @Getter @Setter
     private boolean roundabout = false;
     
+    @Getter @Setter
+    private boolean realtimeCapable = false;
+    
     @Getter
     private Set<Alert> notes;
 
@@ -112,7 +119,13 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
      */
     @Getter @Setter
     private float carSpeed;
-    
+
+    /**
+     * The id of the segment this edge corresponds to, for real-time car speed information.
+     */
+    @Getter @Setter
+    private int segmentId;
+
     /** This street has a toll */
     @Getter @Setter
     private boolean toll;
@@ -242,6 +255,7 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
         boolean backWalkingBike = s0.isBackWalkingBike();
         TraverseMode backMode = s0.getBackMode();
         Edge backEdge = s0.getBackEdge();
+        State backState = s0.getBackState();
         if (backEdge != null) {
             // No illegal U-turns.
             // NOTE(flamholz): we check both directions because both edges get a chance to decide
@@ -267,7 +281,9 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
         }
 
         // Automobiles have variable speeds depending on the edge type
-        double speed = calculateSpeed(options, traverseMode);
+        double speed = calculateSpeed(s0, options, traverseMode);
+
+        if (speed == 0) return null; // A speed of zero indicates an error.
         
         double time = length / speed;
         double weight;
@@ -346,12 +362,20 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
 
         PlainStreetEdge backPSE;
         if (backEdge != null && backEdge instanceof PlainStreetEdge) {
+            final CarSpeeds snapshot = options.rctx != null ? options.rctx.carSpeedsSnapshot : null;
             backPSE = (PlainStreetEdge) backEdge;
             RoutingRequest backOptions = backWalkingBike ?
                     s0.getOptions().bikeWalkingOptions : s0.getOptions();
-            double backSpeed = backPSE.calculateSpeed(backOptions, backMode);
+            double backSpeed = backPSE.calculateSpeed(backState, backOptions, backMode);
             final double realTurnCost;  // Units are seconds.
-            
+
+            // Apply turn restrictions
+            if (options.arriveBy && !canTurnOnto(backPSE, s0, backMode)) {
+                return null;
+            } else if (!options.arriveBy && !backPSE.canTurnOnto(this, s0, traverseMode)) {
+                return null;
+            }
+
             /* Compute turn cost.
              * 
              * This is a subtle piece of code. Turn costs are evaluated differently during
@@ -364,19 +388,18 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
              * that during reverse traversal, we must also use the speed for the mode of
              * the backEdge, rather than of the current edge.
              */
-            if (options.arriveBy && tov instanceof IntersectionVertex) { // arrive-by search
-                if (!canTurnOnto(backPSE, s0, backMode)) {
-                    return null;
-                }
+            if (snapshot != null && (segmentId > 0 || backPSE.segmentId > 0)) {
+                // If either edge has dynamic car speed information, turn costs should not be added.
+                realTurnCost = 0;
+            } else if (options.arriveBy && tov instanceof IntersectionVertex) { // arrive-by search
                 IntersectionVertex traversedVertex = ((IntersectionVertex) tov);
+
                 realTurnCost = backOptions.getIntersectionTraversalCostModel().computeTraversalCost(
                         traversedVertex, this, backPSE, backMode, backOptions, (float) speed,
                         (float) backSpeed);
-            } else if (fromv instanceof IntersectionVertex) { // depart-after search
-                if (!backPSE.canTurnOnto(this, s0, traverseMode)) {
-                    return null;
-                }
+            } else if (!options.arriveBy && fromv instanceof IntersectionVertex) { // depart-after search
                 IntersectionVertex traversedVertex = ((IntersectionVertex) fromv);
+
                 realTurnCost = options.getIntersectionTraversalCostModel().computeTraversalCost(
                         traversedVertex, backPSE, this, traverseMode, options, (float) backSpeed,
                         (float) speed);                
@@ -426,24 +449,142 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
     }
 
     /**
-     * Calculate the average automobile traversal speed of this segment, given
-     * the RoutingRequest, and return it in meters per second.
+     * Calculate the start time of the given time slot.
      */
-    private double calculateCarSpeed(RoutingRequest options) {
+    private long calculateStartTime(long timestamp) {
+        return timestamp - timestamp % TIME_SLOT;
+    }
+
+    /**
+     * Is a timestamp plus a time offset still located in the same time slot as that same timestamp?
+     */
+    private boolean isSameTimeSlot(long timestamp, long offset, boolean arriveBy) {
+        long signCorrectedOffset = arriveBy ? -offset : offset;
+        return calculateStartTime(timestamp) == calculateStartTime(timestamp + signCorrectedOffset);
+    }
+
+    /**
+     * Calculate the start time of the next time slot given a time located in the current time slot.
+     */
+    private long calculateNextTime(long timestamp, boolean arriveBy) {
+        long startTime = calculateStartTime(timestamp);
+
+        if (arriveBy) {
+            if (timestamp == startTime) {
+                return startTime - TIME_SLOT;
+            } else {
+                return startTime;
+            }
+        } else {
+            return startTime + TIME_SLOT;
+        }
+    }
+
+    /**
+     * Convert a time value to a speed value that will yield the exact same result during traversal.
+     * This method was written for the sole purpose of reliable dynamic car routing. It specifically
+     * requires that all edges with dynamic car speed information have their turn costs set to zero.
+     */
+    private double convertTimeToSpeed(long time) {
+        double speed = 1000.0 * length / time;  // Milliseconds are annoying
+
+        if (time == Math.ceil(length / speed) * 1000L) return speed;
+
+        while (time < Math.ceil(length / speed) * 1000L) {
+            speed = Math.nextUp(speed);
+        }
+
+        while (time > Math.ceil(length / speed) * 1000L) {
+            speed = Math.nextAfter(speed, Double.NEGATIVE_INFINITY);
+        }
+
+        return speed;
+    }
+
+    /**
+     * Calculate composite car speed for an edge. This may only arise when using dynamic car speeds.
+     * Arrive-by searches need to be treated differently, because they look backwards in time, which
+     * will look a little weird in certain places. This is caused by the different nature of doubles
+     * (semi-continuous) versus longs (uniformly discrete). Unfortunately, this makes the code ugly.
+     */
+    private double calculateCompositeCarSpeed(long timestamp, CarSpeeds carSpeeds,
+            boolean arriveBy, int type) {
+        double distance = 0;
+        long time = timestamp;
+
+        while (distance < length) {
+            long nextTime = calculateNextTime(time, arriveBy);
+            double speed = carSpeeds.getCarSpeed(arriveBy ? nextTime : time, segmentId, type);
+            double extraDistance = speed * Math.abs(time - nextTime) * .001;
+
+            if (!(extraDistance > 0)) { // If extraDistance is NaN, extraDistance > 0 is also false.
+                return 0;
+            } else if ((distance + extraDistance) <= length) {
+                distance += extraDistance;
+                time = nextTime;
+            } else {
+                double neededDistance = length - distance;
+                distance = length;
+                if (arriveBy) {
+                    time -= Math.ceil(neededDistance / speed) * 1000L;
+                } else {
+                    time += Math.ceil(neededDistance / speed) * 1000L;
+                }
+            }
+        }
+
+        return convertTimeToSpeed(Math.abs(time - timestamp));
+    }
+
+    /**
+     * Calculate the average automobile traversal speed of this segment, given the current timestamp
+     * and the RoutingContext, and return it in meters per second.
+     */
+    private double calculateCarSpeed(long timestamp, RoutingContext routingContext,
+            boolean arriveBy, int type) {
+        if (routingContext != null) {
+            final CarSpeeds carSpeeds = routingContext.carSpeedsSnapshot;
+
+            if (carSpeeds != null) {
+                double speed = carSpeeds.getCarSpeed(timestamp, segmentId, type);
+
+                if (speed >= 0) {
+                    long offset = 1000L * (long) Math.ceil(length / speed);
+
+                    if (isSameTimeSlot(timestamp, offset, arriveBy)) {
+                        return speed;
+                    } else {
+                        return calculateCompositeCarSpeed(timestamp, carSpeeds, arriveBy, type);
+                    }
+                }
+            }
+        }
+
         return carSpeed;
     }
-    
+
     /**
-     * Calculate the speed appropriately given the RoutingRequest and traverseMode.
+     * Calculate the speed appropriately given the State, RoutingRequest and traverseMode.
      */
-    private double calculateSpeed(RoutingRequest options, TraverseMode traverseMode) {
-        if (traverseMode == null) {
-            return Double.NaN;
-        } else if (traverseMode.isDriving()) {
-            // NOTE: Automobiles have variable speeds depending on the edge type
-            return calculateCarSpeed(options);
+    private double calculateSpeed(State state, RoutingRequest options, TraverseMode traverseMode) {
+        if (state == null || options == null || traverseMode == null) {
+            return 0;
         }
-        return options.getSpeed(traverseMode);
+
+        final double speed;
+
+        if (traverseMode.isDriving()) {
+            if (segmentId > 0) {
+                speed = calculateCarSpeed(state.getTimeInMillis(), options.rctx, options.arriveBy,
+                        options.dynamicCarSpeedType);
+            } else {
+                speed = carSpeed;
+            }
+        } else {
+            speed = options.getSpeed(traverseMode);
+        }
+
+        return speed > 0 ? speed : 0;
     }
 
     @Override
@@ -574,4 +715,11 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
         return super.detachFrom();
     }
 
+    public float getDynamicCarSpeed(CarSpeeds snapshot, long timestamp, int type) {
+        if (snapshot != null && type > 0 && segmentId > 0) {
+            return snapshot.getCarSpeed(timestamp, segmentId, type);
+        }
+
+        return Float.NaN;
+    }
 }

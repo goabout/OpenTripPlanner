@@ -26,6 +26,7 @@ import org.opentripplanner.updater.GraphUpdater;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.alerts.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.bike_rental.BikeRentalUpdater;
+import org.opentripplanner.updater.car_speeds.CarSpeedsUpdater;
 import org.opentripplanner.updater.example.ExampleGraphUpdater;
 import org.opentripplanner.updater.example.ExamplePollingGraphUpdater;
 import org.opentripplanner.updater.stoptime.PollingStoptimeUpdater;
@@ -127,6 +128,9 @@ public class GraphUpdaterConfigurator {
                         }
                         else if (type.equals("example-polling-updater")) {
                             updater = new ExamplePollingGraphUpdater();
+                        }
+                        else if (type.equals("car-speeds-updater")) {
+                            updater = new CarSpeedsUpdater();
                         }
                     }
                     

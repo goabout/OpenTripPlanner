@@ -2451,6 +2451,13 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
                 if (backStreet != null)
                     backStreet.setRoundabout(true);
             }
+            
+            if (way.isRealtimeCapable()) {
+            	if (street != null)
+                    street.setRealtimeCapable(true);
+                if (backStreet != null)
+                    backStreet.setRealtimeCapable(true);
+            }
 
             return new P2<PlainStreetEdge>(street, backStreet);
         }

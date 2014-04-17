@@ -347,6 +347,15 @@ public class RoutingRequest implements Cloneable, Serializable {
     public boolean ignoreRealtimeUpdates = false;
 
     /**
+     * The type of dynamic car speed data requested by the user. Higher numbers mean more sources.
+     * 0: Do not use dynamic car speed data.
+     * 1: Use only the free flow speed data.
+     * 2: Also use the (normal and holiday) week speed data.
+     * 3: Also use the short term speed data.
+     */
+    public int dynamicCarSpeedType = Integer.MAX_VALUE;
+
+    /**
      * If true, the remaining weight heuristic is disabled. Currently only implemented for the long
      * distance path service.
      */
@@ -380,7 +389,8 @@ public class RoutingRequest implements Cloneable, Serializable {
         // http://en.wikipedia.org/wiki/Walking
         walkSpeed = 1.33; // 1.33 m/s ~ 3mph, avg. human speed
         bikeSpeed = 5; // 5 m/s, ~11 mph, a random bicycling speed
-        carSpeed = 15; // 15 m/s, ~35 mph, a random driving speed
+        // http://en.wikipedia.org/wiki/Speed_limit
+        carSpeed = 40; // 40 m/s, 144 km/h, above the maximum (finite) driving speed limit worldwide
         setModes(new TraverseModeSet(new TraverseMode[] { TraverseMode.WALK, TraverseMode.TRANSIT }));
         bikeWalkingOptions = this;
 
@@ -904,6 +914,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 && clampInitialWait == other.clampInitialWait
                 && reverseOptimizeOnTheFly == other.reverseOptimizeOnTheFly
                 && ignoreRealtimeUpdates == other.ignoreRealtimeUpdates
+                && dynamicCarSpeedType == other.dynamicCarSpeedType
                 && disableRemainingWeightHeuristic == other.disableRemainingWeightHeuristic
                 && ObjectUtils.nullSafeEquals(startingTransitTripId, other.startingTransitTripId);
     }
@@ -931,6 +942,7 @@ public class RoutingRequest implements Cloneable, Serializable {
                 + new Long(clampInitialWait).hashCode() * 209477
                 + new Boolean(reverseOptimizeOnTheFly).hashCode() * 95112799
                 + new Boolean(ignoreRealtimeUpdates).hashCode() * 154329
+                + dynamicCarSpeedType * 199933
                 + new Boolean(disableRemainingWeightHeuristic).hashCode() * 193939;
         if (batch) {
             hashCode *= -1;
