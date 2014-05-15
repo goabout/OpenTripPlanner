@@ -117,7 +117,7 @@ public class adapticonCsv implements csvExporterInterface{
 					}	
 				}
 			} catch (Exception e) {
-				LOG.error(e.toString());
+				e.printStackTrace();
 			}	
 		}
 
