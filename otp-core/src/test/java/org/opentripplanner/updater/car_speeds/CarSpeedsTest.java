@@ -22,6 +22,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.TimeZone;
 import java.util.prefs.Preferences;
 
 import org.junit.Before;
@@ -61,6 +62,7 @@ public class CarSpeedsTest {
         IntersectionVertex v1 = mock(IntersectionVertex.class);
         CarSpeeds carSpeeds = mock(CarSpeeds.class);
 
+        when(graph.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
         when(graph.getCarSpeeds()).thenReturn(carSpeeds);
         when(carSpeeds.getCarSpeed(0L, 1, Integer.MAX_VALUE)).thenReturn(1.0F);
         when(carSpeeds.getCarSpeed(300000L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);
@@ -95,6 +97,7 @@ public class CarSpeedsTest {
         IntersectionVertex v1 = mock(IntersectionVertex.class);
         CarSpeeds carSpeeds = mock(CarSpeeds.class);
 
+        when(graph.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
         when(graph.getCarSpeeds()).thenReturn(carSpeeds);
         when(carSpeeds.getCarSpeed(0L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);
         when(carSpeeds.getCarSpeed(299000L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);
@@ -135,6 +138,7 @@ public class CarSpeedsTest {
         IntersectionVertex v1 = mock(IntersectionVertex.class);
         CarSpeeds carSpeeds = mock(CarSpeeds.class);
 
+        when(graph.getTimeZone()).thenReturn(TimeZone.getTimeZone("UTC"));
         when(graph.getCarSpeeds()).thenReturn(carSpeeds);
         when(carSpeeds.getCarSpeed(299000L, 1, Integer.MAX_VALUE)).thenReturn(1.0F);
         when(carSpeeds.getCarSpeed(300000L, 1, Integer.MAX_VALUE)).thenReturn(2.0F);

@@ -34,6 +34,8 @@ import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.common.geometry.GeometryUtils;
 import org.opentripplanner.common.geometry.PackedCoordinateSequence;
 import org.opentripplanner.common.model.P2;
+import org.opentripplanner.routing.alertpatch.Alert;
+import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.ServiceDay;
@@ -43,6 +45,8 @@ import org.opentripplanner.routing.edgetype.AreaEdge;
 import org.opentripplanner.routing.edgetype.EdgeWithElevation;
 import org.opentripplanner.routing.edgetype.ElevatorAlightEdge;
 import org.opentripplanner.routing.edgetype.FreeEdge;
+import org.opentripplanner.routing.edgetype.FrequencyBasedTripPattern;
+import org.opentripplanner.routing.edgetype.FrequencyBoard;
 import org.opentripplanner.routing.edgetype.OnboardEdge;
 import org.opentripplanner.routing.edgetype.PatternEdge;
 import org.opentripplanner.routing.edgetype.PatternInterlineDwell;
@@ -56,7 +60,6 @@ import org.opentripplanner.routing.error.VertexNotFoundException;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
-import org.opentripplanner.routing.patch.Alert;
 import org.opentripplanner.routing.services.FareService;
 import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.services.PathService;
@@ -77,6 +80,7 @@ import org.springframework.stereotype.Service;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
+import org.opentripplanner.routing.edgetype.PathwayEdge;
 
 @Service @Scope("singleton")
 public class PlanGenerator {
@@ -236,14 +240,14 @@ public class PlanGenerator {
         }
 
         for (State[] legStates : legsStates) {
-            itinerary.addLeg(generateLeg(legStates, showIntermediateStops));
+            itinerary.addLeg(generateLeg(graph, legStates, showIntermediateStops));
         }
 
         addWalkSteps(itinerary.legs, legsStates);
 
         fixupLegs(itinerary.legs, legsStates);
 
-        itinerary.duration = 1000L * lastState.getElapsedTimeSeconds();
+        itinerary.duration = (double) lastState.getElapsedTimeSeconds();
         itinerary.startTime = makeCalendar(states[0]);
         itinerary.endTime = makeCalendar(lastState);
 
@@ -358,7 +362,7 @@ public class PlanGenerator {
      * @param showIntermediateStops Whether to include intermediate stops in the leg or not
      * @return The generated leg
      */
-    private Leg generateLeg(State[] states, boolean showIntermediateStops) {
+    private Leg generateLeg(Graph graph, State[] states, boolean showIntermediateStops) {
         Leg leg = new Leg();
 
         Edge[] edges = new Edge[states.length - 1];
@@ -373,7 +377,7 @@ public class PlanGenerator {
             leg.distance += edges[i].getDistance();
         }
 
-        addModeAndAlerts(leg, states);
+        addModeAndAlerts(graph, leg, states);
 
         TimeZone timeZone = leg.startTime.getTimeZone();
         leg.agencyTimeZoneOffset = timeZone.getOffset(leg.startTime.getTimeInMillis());
@@ -391,9 +395,26 @@ public class PlanGenerator {
 
         leg.interlineWithPreviousLeg = states[0].getBackEdge() instanceof PatternInterlineDwell;
 
+        addFrequencyFields(states, leg);
+
         leg.rentedBike = states[0].isBikeRenting() && states[states.length - 1].isBikeRenting();
 
         return leg;
+    }
+
+    private void addFrequencyFields(State[] states, Leg leg) {
+        if (states[0].getBackEdge() instanceof FrequencyBoard) {
+            State preBoardState = states[0].getBackState();
+
+            FrequencyBoard fb = (FrequencyBoard) states[0].getBackEdge();
+            FrequencyBasedTripPattern pt = fb.getPattern();
+            int boardTime = preBoardState.getServiceDay().secondsSinceMidnight(
+                    preBoardState.getTimeSeconds());
+            int period = pt.getPeriod(fb.getStopIndex(), boardTime); //TODO fix
+
+            leg.isNonExactFrequency = !pt.isExact();
+            leg.headway = period;
+        }
     }
 
     /**
@@ -448,6 +469,9 @@ public class PlanGenerator {
 
                     boardRule = TransitUtils.determineBoardAlightType(boardType);
                     alightRule = TransitUtils.determineBoardAlightType(alightType);
+                }
+                if (legsStates[i][j].getBackEdge() instanceof PathwayEdge) {
+                    legs.get(i).pathway = true;
                 }
             }
 
@@ -540,10 +564,11 @@ public class PlanGenerator {
      * @param leg The leg to add the mode and alerts to
      * @param states The states that go with the leg
      */
-    private void addModeAndAlerts(Leg leg, State[] states) {
+    private void addModeAndAlerts(Graph graph, Leg leg, State[] states) {
         for (State state : states) {
             TraverseMode mode = state.getBackMode();
             Set<Alert> alerts = state.getBackAlerts();
+            Edge edge = state.getBackEdge();
 
             if (mode != null) {
                 leg.mode = mode.toString();
@@ -552,6 +577,12 @@ public class PlanGenerator {
             if (alerts != null) {
                 for (Alert alert : alerts) {
                     leg.addAlert(alert);
+                }
+            }
+
+            for (AlertPatch alertPatch : graph.getAlertPatches(edge)) {
+                if (alertPatch.displayDuring(state)) {
+                    leg.addAlert(alertPatch.getAlert());
                 }
             }
         }

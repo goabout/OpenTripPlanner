@@ -11,7 +11,6 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
-/* this is in api.common so it can set package-private fields */
 package org.opentripplanner.api.ws;
 
 import static org.mockito.Matchers.any;
@@ -51,10 +50,10 @@ import org.opentripplanner.api.model.RelativeDirection;
 import org.opentripplanner.api.model.RouterInfo;
 import org.opentripplanner.api.model.RouterList;
 import org.opentripplanner.api.model.WalkStep;
+import org.opentripplanner.api.model.alertpatch.AlertPatchResponse;
 import org.opentripplanner.api.model.internals.EdgeSet;
 import org.opentripplanner.api.model.internals.FeatureCount;
 import org.opentripplanner.api.model.internals.VertexSet;
-import org.opentripplanner.api.model.patch.PatchResponse;
 import org.opentripplanner.api.model.transit.AgencyList;
 import org.opentripplanner.api.model.transit.ModeList;
 import org.opentripplanner.api.model.transit.RouteData;
@@ -80,6 +79,7 @@ import org.opentripplanner.graph_builder.model.GtfsBundles;
 import org.opentripplanner.graph_builder.services.GraphBuilderWithGtfsDao;
 import org.opentripplanner.graph_builder.services.shapefile.FeatureSourceFactory;
 import org.opentripplanner.model.json_serialization.WithGraph;
+import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.algorithm.GenericAStar;
 import org.opentripplanner.routing.bike_rental.BikeRentalStation;
 import org.opentripplanner.routing.bike_rental.BikeRentalStationService;
@@ -103,9 +103,8 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.impl.RetryingPathServiceImpl;
 import org.opentripplanner.routing.impl.StreetVertexIndexServiceImpl;
 import org.opentripplanner.routing.impl.TravelingSalesmanPathService;
-import org.opentripplanner.routing.patch.Patch;
 import org.opentripplanner.routing.services.GraphService;
-import org.opentripplanner.routing.services.PatchService;
+import org.opentripplanner.routing.services.AlertPatchService;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
 import org.opentripplanner.routing.vertextype.PatternStopVertex;
@@ -145,6 +144,7 @@ class SimpleGraphServiceImpl implements GraphService {
 
     public void putGraph(String graphId, Graph graph) {
         graphs.put(graphId, graph);
+        graph.setRouterId(graphId);
     }
 
     @Override
@@ -493,16 +493,16 @@ public class TestRequest extends TestCase {
 
     /** Smoke test for patcher */
     public void testPatcher() throws JSONException {
-        Patcher p = new Patcher();
-        PatchService service = mock(PatchService.class);
-        when(service.getStopPatches(any(AgencyAndId.class))).thenReturn(new ArrayList<Patch>());
-        when(service.getRoutePatches(any(AgencyAndId.class))).thenReturn(new ArrayList<Patch>());
+        AlertPatcher p = new AlertPatcher();
+        AlertPatchService service = mock(AlertPatchService.class);
+        when(service.getStopPatches(any(AgencyAndId.class))).thenReturn(new ArrayList<AlertPatch>());
+        when(service.getRoutePatches(any(AgencyAndId.class))).thenReturn(new ArrayList<AlertPatch>());
 
-        p.setPatchService(service);
-        PatchResponse stopPatches = p.getStopPatches("TriMet", "5678");
-        assertNull(stopPatches.patches);
-        PatchResponse routePatches = p.getRoutePatches("TriMet", "100");
-        assertNull(routePatches.patches);
+        p.setAlertPatchService(service);
+        AlertPatchResponse stopPatches = p.getStopPatches("TriMet", "5678");
+        assertNull(stopPatches.alertPatches);
+        AlertPatchResponse routePatches = p.getRoutePatches("TriMet", "100");
+        assertNull(routePatches.alertPatches);
     }
 
     public void testRouters() throws JSONException {
@@ -568,9 +568,8 @@ public class TestRequest extends TestCase {
                 -122.578918, false, routerId, null);
         assertTrue(stopsNearPoint.stops.size() > 0);
 
-        long startTime =
-                TestUtils.dateInSeconds("America/Los_Angeles", 2009, 9, 1, 7, 50, 0) * 1000L;
-        long endTime = startTime + 60 * 60 * 1000;
+        long startTime = TestUtils.dateInSeconds("America/Los_Angeles", 2009, 9, 1, 7, 50, 0);
+        long endTime = startTime + 60 * 60;
         StopTimeList stopTimesForStop = (StopTimeList) index.getStopTimesForStop("TriMet", "10579",
                 startTime, endTime, false, false, null, routerId);
         assertTrue(stopTimesForStop.stopTimes.size() > 0);
@@ -743,7 +742,7 @@ public class TestRequest extends TestCase {
 
         Response response = planner.getItineraries();
         Itinerary itinerary = response.getPlan().itinerary.get(0);
-        Long duration = itinerary.duration;
+        Double duration = itinerary.duration;
 
         // Some walking is expected here, because it's slightly faster than staying onboard the bus.
         assertTrue(itinerary.walkDistance > 0);
@@ -1064,7 +1063,7 @@ public class TestRequest extends TestCase {
 
         Response response = planner.getItineraries();
         Itinerary itinerary = response.getPlan().itinerary.get(0);
-        Long duration = itinerary.duration;
+        Double duration = itinerary.duration;
 
         // Add a time penalty without changing the cost
         planner.setBikeSwitchTime(Arrays.asList(30));
@@ -1073,7 +1072,7 @@ public class TestRequest extends TestCase {
         itinerary = response.getPlan().itinerary.get(0);
 
         // Now the itinerary should be 30 seconds longer
-        assertTrue(duration + 30000L == itinerary.duration);
+        assertTrue(duration + 30.0 == itinerary.duration);
 
         // Change the cost as well, so the routing result changes
         planner.setBikeSwitchCost(Arrays.asList(99));
@@ -1083,7 +1082,7 @@ public class TestRequest extends TestCase {
 
         // Now the length of the itinerary should be in between the lengths of the other itineraries
         assertTrue(duration < itinerary.duration);
-        assertTrue(duration + 30000L > itinerary.duration);
+        assertTrue(duration + 30.0 > itinerary.duration);
     }
 
     /**

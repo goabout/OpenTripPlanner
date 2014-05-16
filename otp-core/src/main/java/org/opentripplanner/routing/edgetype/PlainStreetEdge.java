@@ -29,6 +29,7 @@ import org.opentripplanner.common.TurnRestriction;
 import org.opentripplanner.common.TurnRestrictionType;
 import org.opentripplanner.common.geometry.DirectionUtils;
 import org.opentripplanner.common.geometry.PackedCoordinateSequence;
+import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.core.RoutingContext;
 import org.opentripplanner.routing.core.RoutingRequest;
 import org.opentripplanner.routing.core.State;
@@ -36,7 +37,6 @@ import org.opentripplanner.routing.core.StateEditor;
 import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.core.TraverseModeSet;
 import org.opentripplanner.routing.graph.Edge;
-import org.opentripplanner.routing.patch.Alert;
 import org.opentripplanner.routing.util.ElevationProfileSegment;
 import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
@@ -417,11 +417,7 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
             time += turnTime;
             weight += options.turnReluctance * realTurnCost;
         }
-
-        int timeLong = (int) Math.ceil(time);
-        s1.incrementTimeInSeconds(timeLong);
         
-        s1.incrementWeight(weight);
 
         if (walkingBike || TraverseMode.BICYCLE.equals(traverseMode)) {
             if (!(backWalkingBike || TraverseMode.BICYCLE.equals(backMode))) {
@@ -434,10 +430,36 @@ public class PlainStreetEdge extends StreetEdge implements Cloneable {
             s1.incrementWalkDistance(length);
         }
         
+        // apply strategy for avoiding walking too far, either soft or hard.
         if (s1.weHaveWalkedTooFar(options)) {
-            LOG.debug("Too much walking. Bailing.");
-            return null;
+
+            // if we're using a soft walk-limit
+            if( options.isSoftWalkLimiting() ){
+                // just slap a penalty for the overage onto s1
+
+                // apply penalty if we stepped over the max walk limit on this traversal
+                double overageLength;
+                if(s0.getWalkDistance() <= options.getMaxWalkDistance() && s1.getWalkDistance() > options.getMaxWalkDistance()){
+                    weight += options.getSoftWalkPenalty();
+                    overageLength = s1.getWalkDistance() - options.getMaxWalkDistance();
+                } else {
+                    overageLength = length;
+                }
+
+                // apply overage
+                weight += options.getSoftWalkOverageRate() * overageLength;
+
+            } else {
+                // else, it's a hard limit; bail
+                LOG.debug("Too much walking. Bailing.");
+                return null;
+            }
         }
+
+        int timeLong = (int) Math.ceil(time);
+        s1.incrementTimeInSeconds(timeLong);
+        
+        s1.incrementWeight(weight);
         
         s1.addAlerts(notes);
         

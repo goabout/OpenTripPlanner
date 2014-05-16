@@ -22,10 +22,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.opentripplanner.analyst.core.GeometryIndex;
+import org.opentripplanner.analyst.request.IsoChroneSPTRendererAccSampling;
+import org.opentripplanner.analyst.request.IsoChroneSPTRendererRecursiveGrid;
 import org.opentripplanner.analyst.request.Renderer;
 import org.opentripplanner.analyst.request.SPTCache;
 import org.opentripplanner.analyst.request.SampleFactory;
 import org.opentripplanner.analyst.request.TileCache;
+import org.opentripplanner.analyst.request.SampleGridRenderer;
 import org.opentripplanner.api.ws.PlanGenerator;
 import org.opentripplanner.api.ws.services.MetadataService;
 import org.opentripplanner.graph_builder.GraphBuilderTask;
@@ -39,6 +42,7 @@ import org.opentripplanner.graph_builder.impl.ned.NEDGraphBuilderImpl;
 import org.opentripplanner.graph_builder.impl.ned.NEDGridCoverageFactoryImpl;
 import org.opentripplanner.graph_builder.impl.osm.DefaultWayPropertySetSource;
 import org.opentripplanner.graph_builder.impl.osm.OpenStreetMapGraphBuilderImpl;
+import org.opentripplanner.graph_builder.impl.raptor.RaptorDataBuilder;
 import org.opentripplanner.graph_builder.impl.transit_index.TransitIndexBuilder;
 import org.opentripplanner.graph_builder.model.GtfsBundle;
 import org.opentripplanner.graph_builder.services.GraphBuilder;
@@ -55,6 +59,7 @@ import org.opentripplanner.routing.impl.GraphServiceBeanImpl;
 import org.opentripplanner.routing.impl.GraphServiceImpl;
 import org.opentripplanner.routing.impl.RetryingPathServiceImpl;
 import org.opentripplanner.routing.impl.LongDistancePathService;
+import org.opentripplanner.routing.impl.raptor.Raptor;
 import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.services.PathService;
 import org.opentripplanner.routing.services.RemainingWeightHeuristicFactory;
@@ -104,9 +109,16 @@ public class OTPConfigurator {
         cpf.bind(PlanGenerator.class);
         cpf.bind(MetadataService.class);
         cpf.bind(SPTService.class, new GenericAStar());
-        
+
         // Choose a PathService to wrap the SPTService, depending on expected maximum path lengths
-        if (params.longDistance) {
+        if (params.raptor) {
+            Raptor raptor = new Raptor();
+            raptor.setMultiPathTimeout(1.0);
+            raptor.setShortPathCutoff(1000);
+            cpf.bind(PathService.class, raptor);
+            cpf.bind(RemainingWeightHeuristicFactory.class,
+                    new DefaultRemainingWeightHeuristicFactoryImpl());
+        } else if (params.longDistance) {
             LongDistancePathService pathService = new LongDistancePathService();
             pathService.setTimeout(10);
             cpf.bind(PathService.class, pathService);
@@ -126,6 +138,9 @@ public class OTPConfigurator {
             cpf.bind(TileCache.class);
             cpf.bind(GeometryIndex.class);
             cpf.bind(SampleFactory.class);
+            cpf.bind(IsoChroneSPTRendererAccSampling.class);
+            cpf.bind(IsoChroneSPTRendererRecursiveGrid.class);
+            cpf.bind(SampleGridRenderer.class);
         }
         
         // Perform field injection on bound instances and call post-construct methods
@@ -256,12 +271,15 @@ public class OTPConfigurator {
                 }
             }
             List<GraphBuilderWithGtfsDao> gtfsBuilders = new ArrayList<GraphBuilderWithGtfsDao>();
-            if (params.transitIndex) {
+            if (params.transitIndex || params.raptor) {
                 gtfsBuilders.add(new TransitIndexBuilder());
             }
             gtfsBuilder.setFareServiceFactory(new DefaultFareServiceFactory());
             gtfsBuilder.setGtfsGraphBuilders(gtfsBuilders);
             gtfsBuilder.setDeleteUselessDwells(params.deleteUselessDwells);
+        }
+        if(params.raptor) {
+            graphBuilder.addGraphBuilder(new RaptorDataBuilder());
         }
         if (configFile != null) {
             EmbeddedConfigGraphBuilderImpl embeddedConfigBuilder = new EmbeddedConfigGraphBuilderImpl();

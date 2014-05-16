@@ -56,6 +56,8 @@ import org.opentripplanner.openstreetmap.model.OSMWay;
 import org.opentripplanner.openstreetmap.model.OSMWithTags;
 import org.opentripplanner.openstreetmap.services.OpenStreetMapContentHandler;
 import org.opentripplanner.openstreetmap.services.OpenStreetMapProvider;
+import org.opentripplanner.routing.alertpatch.Alert;
+import org.opentripplanner.routing.alertpatch.TranslatedString;
 import org.opentripplanner.routing.algorithm.GenericDijkstra;
 import org.opentripplanner.routing.algorithm.strategies.SkipEdgeStrategy;
 import org.opentripplanner.routing.bike_rental.BikeRentalStation;
@@ -82,8 +84,6 @@ import org.opentripplanner.routing.edgetype.StreetTraversalPermission;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
-import org.opentripplanner.routing.patch.Alert;
-import org.opentripplanner.routing.patch.TranslatedString;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.util.ElevationUtils;
@@ -180,6 +180,12 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
      */
     @Setter
     private CustomNamer customNamer;
+    
+    /**
+     * Ignore wheelchair accessibility information.
+     */
+    @Setter
+    private boolean ignoreWheelchairAccessibility = false;
 
     /**
      * Allows for alternate PlainStreetEdge implementations; this is intended for users who want to provide more info in PSE than OTP normally keeps
@@ -2554,7 +2560,8 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
                 street.setToll(false);
 
             /* TODO: This should probably generalized somehow? */
-            if (way.isTagFalse("wheelchair") || (steps && !way.isTagTrue("wheelchair"))) {
+            if (!ignoreWheelchairAccessibility
+                    && (way.isTagFalse("wheelchair") || (steps && !way.isTagTrue("wheelchair")))) {
                 street.setWheelchairAccessible(false);
             }
 

@@ -67,6 +67,9 @@ public class StreetlessStopLinker implements GraphBuilder {
             LOG.trace("linking stop {}", ts);
             int n = 0;
             for (TransitStop other : index.getNearbyTransitStops(c, radius)) {
+                if(!other.isStreetLinkable())
+                    continue;
+
                 Coordinate coordinates[] = new Coordinate[] {c, other.getCoordinate()};
                 double distance = distanceLibrary.distance(coordinates[0], coordinates[1]);
                 LineString geometry = geometryFactory.createLineString(coordinates);
