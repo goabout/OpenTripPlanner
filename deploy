@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "--help" ]; then
+  echo "usage: $PROGNAME [STAGE]" >&2
+  echo >&2
+  echo "Deploy artifact to stage STAGE. If omitted, STAGE is inferred." >&2
+  exit 1
+fi
+
+if [ "$1" ]; then
+  stage="$1"
+elif [ "$TRAVIS_PULL_REQUEST" -a "$TRAVIS_PULL_REQUEST" != "false" ]; then
+  stage="pr$TRAVIS_PULL_REQUEST"
+else
+  stage=`git rev-parse --abbrev-ref HEAD | sed -e 's#^.*/##' | tr '.-' '_'`
+fi
+
+dest=s3://goabout-artifacts/opentripplanner/$stage
+
+echo "Deploying to $dest..."
+export AWS_CONFIG_FILE=.aws_config
+aws s3 rm --recursive $dest
+aws s3 cp otp-core/target/otp.jar $dest/otp.jar
+aws s3 cp deploy_vars.yml $dest/ansible_vars.yml

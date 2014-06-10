@@ -1,0 +1,11 @@
+language: java
+
+jdk: oraclejdk7
+
+cache:
+- directories:
+  - ~/.m2
+
+script:
+- mvn clean verify
+- ./deploy

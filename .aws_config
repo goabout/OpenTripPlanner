@@ -1,0 +1,5 @@
+[default]
+aws_access_key_id = AKIAIRNHILXHFGTVULLA
+aws_secret_access_key = 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
+region = eu-west-1
+base_url = s3-eu-west-1.amazonaws.com
