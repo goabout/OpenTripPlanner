@@ -13,6 +13,8 @@ if [ "$1" ]; then
   stage="$1"
 elif [ "$TRAVIS_PULL_REQUEST" -a "$TRAVIS_PULL_REQUEST" != "false" ]; then
   stage="pr$TRAVIS_PULL_REQUEST"
+elif [ "$TRAVIS_BRANCH" ]; then
+  stage="$TRAVIS_BRANCH"
 else
   stage=`git rev-parse --abbrev-ref HEAD | sed -e 's#^.*/##' | tr '.-' '_'`
 fi

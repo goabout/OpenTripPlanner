@@ -3,9 +3,20 @@ language: java
 jdk: oraclejdk7
 
 cache:
+- apt
 - directories:
-  - ~/.m2
+  - ~/.m2/repository
+
+env:
+  global:
+  - AWS_ACCESS_KEY_ID=AKIAJUNXOQ3BWJP64XWA
+  - secure: "NV+MJh+MeHvpjpJP7YwshOpKLHngnvMlaaa9KNQEiTEm02Mg9SoO5oQulCzNsmYtwLU6HYSE7tE1Pe/+ICJMtnqoloBoJdtN00Od0Y1ymWZj3ryw+w2A8gqhz5MLpe6TgibCR7agqQ7XHa+B0GTVa9R8mCxGKsd5g2YVqznLU08="
+
+install:
+- sudo apt-get update -qq
+- sudo apt-get install python-pip
+- sudo pip install awscli
 
 script:
-- mvn clean verify
-- ./deploy
+- mvn -q clean verify
+- [ "$TRAVIS_PULL_REQUEST" != "false" ] && ./deploy
