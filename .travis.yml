@@ -19,4 +19,4 @@ install:
 
 script:
 - mvn -q clean verify
-- [ "$TRAVIS_PULL_REQUEST" != "false" ] && ./deploy
+- [ "$TRAVIS_PULL_REQUEST" = "false" ] && ./deploy
