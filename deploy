@@ -12,17 +12,36 @@ fi
 if [ "$1" ]; then
   stage="$1"
 elif [ "$TRAVIS_PULL_REQUEST" -a "$TRAVIS_PULL_REQUEST" != "false" ]; then
-  stage="pr$TRAVIS_PULL_REQUEST"
+  #stage="pr$TRAVIS_PULL_REQUEST"
+  echo "Not deploying on pull request, AWS credentials not available"
+  exit 0
 elif [ "$TRAVIS_BRANCH" ]; then
   stage="$TRAVIS_BRANCH"
 else
-  stage=`git rev-parse --abbrev-ref HEAD | sed -e 's#^.*/##' | tr '.-' '_'`
+  stage=`git rev-parse --abbrev-ref HEAD`
 fi
 
-dest=s3://goabout-artifacts/opentripplanner/$stage
+stage=`echo "$stage" | sed -e 's#^.*/##' | tr '.-' '_'`
+bucket=goabout-artifacts
+prefix=opentripplanner/$stage
 
-echo "Deploying to $dest..."
+delete() {
+  aws --quiet s3 rm --recursive s3://$bucket/$prefix
+  echo "delete: $bucket/$prefix"
+}
+
+put() {
+  src="$1"
+  dst="$2"
+
+  md5=`openssl dgst -md5 -binary "$src" | openssl enc -base64`
+  aws s3api put-object --bucket $bucket --key "$prefix/$dst" \
+                       --body "$src" --content-md5 $md5 > /dev/null
+  echo "put: $bucket/$prefix/$dst"
+}
+
+echo "Deploying to $bucket/$prefix"
 export AWS_CONFIG_FILE=.aws_config
-aws s3 rm --recursive $dest
-aws s3 cp otp-core/target/otp.jar $dest/otp.jar
-aws s3 cp deploy_vars.yml $dest/ansible_vars.yml
+delete
+put otp-core/target/otp.jar otp.jar
+put deploy_vars.yml ansible_vars.yml
