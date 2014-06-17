@@ -16,54 +16,72 @@ package org.opentripplanner.routing.algorithm;
 import junit.framework.TestCase;
 
 import org.opentripplanner.common.geometry.GeometryUtils;
+import org.opentripplanner.routing.bike_park.BikePark;
 import org.opentripplanner.routing.core.RoutingRequest;
+import org.opentripplanner.routing.core.State;
+import org.opentripplanner.routing.core.TraverseMode;
 import org.opentripplanner.routing.core.TraverseModeSet;
+import org.opentripplanner.routing.edgetype.BikeParkEdge;
 import org.opentripplanner.routing.edgetype.ParkAndRideEdge;
 import org.opentripplanner.routing.edgetype.ParkAndRideLinkEdge;
 import org.opentripplanner.routing.edgetype.PlainStreetEdge;
+import org.opentripplanner.routing.edgetype.StreetBikeParkLink;
 import org.opentripplanner.routing.edgetype.StreetTraversalPermission;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
+import org.opentripplanner.routing.vertextype.BikeParkVertex;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
 import org.opentripplanner.routing.vertextype.ParkAndRideVertex;
 import org.opentripplanner.routing.vertextype.StreetVertex;
 
 /**
- * Test P+R.
+ * Test P+R (both car P+R and bike P+R).
  * 
  * @author laurent
  */
 public class TestParkAndRide extends TestCase {
 
-    public void testBasic() throws Exception {
+    private Graph graph;
+    private StreetVertex A,B,C,D;
+
+    @Override
+    protected void setUp() throws Exception {
+        graph = new Graph();
 
         // Generate a very simple graph
-        Graph graph = new Graph();
-        StreetVertex A = new IntersectionVertex(graph, "A", 0.000, 45, "A");
-        StreetVertex B = new IntersectionVertex(graph, "B", 0.001, 45, "B");
-        StreetVertex C = new IntersectionVertex(graph, "C", 0.002, 45, "C");
+        A = new IntersectionVertex(graph, "A", 0.000, 45, "A");
+        B = new IntersectionVertex(graph, "B", 0.001, 45, "B");
+        C = new IntersectionVertex(graph, "C", 0.002, 45, "C");
+        D = new IntersectionVertex(graph, "D", 0.003, 45, "D");
 
         @SuppressWarnings("unused")
-        Edge walk = new PlainStreetEdge(A, B, GeometryUtils.makeLineString(0.000, 45, 0.001, 45),
+        Edge driveOnly = new PlainStreetEdge(A, B, GeometryUtils.makeLineString(0.000, 45, 0.001, 45),
                 "AB street", 87, StreetTraversalPermission.CAR, false);
 
         @SuppressWarnings("unused")
-        Edge mustDrive = new PlainStreetEdge(B, C, GeometryUtils.makeLineString(0.001, 45, 0.002,
-                45), "BC street", 87, StreetTraversalPermission.PEDESTRIAN, false);
+        Edge walkAndBike = new PlainStreetEdge(B, C, GeometryUtils.makeLineString(0.001, 45, 0.002,
+                45), "BC street", 87, StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE, false);
+
+        @SuppressWarnings("unused")
+        Edge walkOnly = new PlainStreetEdge(C, D, GeometryUtils.makeLineString(0.002, 45, 0.003,
+                45), "CD street", 87, StreetTraversalPermission.PEDESTRIAN, false);
+    };
+    
+    public void testCar() throws Exception {
 
         GenericAStar aStar = new GenericAStar();
 
         // It is impossible to get from A to C in WALK mode,
-        RoutingRequest options = new RoutingRequest(new TraverseModeSet("WALK"));
+        RoutingRequest options = new RoutingRequest("WALK");
         options.setRoutingContext(graph, A, C);
         ShortestPathTree tree = aStar.getShortestPathTree(options);
         GraphPath path = tree.getPath(C, false);
         assertNull(path);
 
         // or CAR+WALK (no P+R).
-        options = new RoutingRequest(new TraverseModeSet("WALK,CAR"));
+        options = new RoutingRequest("WALK,CAR_PARK");
         options.freezeTraverseMode();
         options.setRoutingContext(graph, A, C);
         tree = aStar.getShortestPathTree(options);
@@ -79,7 +97,7 @@ public class TestParkAndRide extends TestCase {
 
         // But it is still impossible to get from A to C by WALK only
         // (AB is CAR only).
-        options = new RoutingRequest(new TraverseModeSet("WALK"));
+        options = new RoutingRequest("WALK");
         options.freezeTraverseMode();
         options.setRoutingContext(graph, A, C);
         tree = aStar.getShortestPathTree(options);
@@ -87,7 +105,7 @@ public class TestParkAndRide extends TestCase {
         assertNull(path);
         
         // Or CAR only (BC is WALK only).
-        options = new RoutingRequest(new TraverseModeSet("CAR"));
+        options = new RoutingRequest("CAR");
         options.freezeTraverseMode();
         options.setRoutingContext(graph, A, C);
         tree = aStar.getShortestPathTree(options);
@@ -95,10 +113,68 @@ public class TestParkAndRide extends TestCase {
         assertNull(path);
 
         // But we can go from A to C with CAR+WALK mode using P+R.
-        options = new RoutingRequest(new TraverseModeSet("WALK,CAR"));
+        options = new RoutingRequest("WALK,CAR_PARK");
         options.setRoutingContext(graph, A, C);
+        options.setParkAndRide(true);
         tree = aStar.getShortestPathTree(options);
         path = tree.getPath(C, false);
         assertNotNull(path);
+    }
+
+    public void testBike() throws Exception {
+
+        GenericAStar aStar = new GenericAStar();
+
+        // Impossible to get from B to D in BIKE+WALK (no bike P+R).
+        RoutingRequest options = new RoutingRequest(new TraverseModeSet("BICYCLE,WALK"));
+        options.setBikeParkAndRide(true);
+        options.freezeTraverseMode();
+        options.setRoutingContext(graph, B, D);
+        ShortestPathTree tree = aStar.getShortestPathTree(options);
+        GraphPath path = tree.getPath(D, false);
+        // Note: the assertions below depends on allowing ending with bike in bike P+R mode
+        assertNotNull(path);
+        State s = tree.getState(D);
+        assertFalse(s.isBikeParked());
+        // Final state is bicycling your own bike.
+        assertTrue(s.getNonTransitMode() == TraverseMode.BICYCLE);
+
+        // So we add a bike P+R at C.
+        BikePark bpc = new BikePark();
+        bpc.id = "bpc";
+        bpc.name = "Bike Park C";
+        bpc.x = 0.002;
+        bpc.y = 45.00001;
+        bpc.spacesAvailable = 1;
+        BikeParkVertex BPRC = new BikeParkVertex(graph, bpc);
+        new BikeParkEdge(BPRC);
+        new StreetBikeParkLink(BPRC, C);
+        new StreetBikeParkLink(C, BPRC);
+
+        // Still impossible from B to D by bike only (CD is WALK only).
+        // Solution will make you walk your bike until the end.
+        options = new RoutingRequest(new TraverseModeSet("BICYCLE"));
+        options.setBikeParkAndRide(false);
+        options.setRoutingContext(graph, B, D);
+        // TODO freezeTraverseMode seems to be broken
+        // To remove?
+        // options.freezeTraverseMode();
+        tree = aStar.getShortestPathTree(options);
+        path = tree.getPath(D, false);
+        assertNotNull(path);
+        s = tree.getState(D);
+        assertFalse(s.isBikeParked());
+        assertTrue(s.isBackWalkingBike());
+
+        // But we can go from B to D with BICYCLE+WALK mode using bike P+R.
+        options = new RoutingRequest(new TraverseModeSet("BICYCLE,WALK"));
+        options.setBikeParkAndRide(true);
+        options.setRoutingContext(graph, B, D);
+        tree = aStar.getShortestPathTree(options);
+        path = tree.getPath(D, false);
+        assertNotNull(path);
+        s = tree.getState(D);
+        assertTrue(s.isBikeParked());
+        assertFalse(s.isBackWalkingBike());
     }
 }

@@ -116,15 +116,18 @@ public class GenericAStar implements SPTService { // maybe this should be wrappe
         runState.heuristic = options.batch ? 
                 new TrivialRemainingWeightHeuristic() : runState.rctx.remainingWeightHeuristic; 
 
-        // heuristic calc could actually be done when states are constructed, inside state
-        State initialState = new State(options);
-        runState.heuristic.initialize(initialState, runState.rctx.target, abortTime);
+        // Since initial states can be multiple, heuristic cannot depend on the initial state.
+        runState.heuristic.initialize(runState.options, runState.rctx.origin, runState.rctx.target,
+                abortTime);
         if (abortTime < Long.MAX_VALUE  && System.currentTimeMillis() > abortTime) {
             LOG.warn("Timeout during initialization of interleaved bidirectional heuristic.");
             options.rctx.debugOutput.timedOut = true;
             return null; // Search timed out
         }
-        runState.spt.add(initialState);
+        Collection<State> initialStates = State.buildStates(options);
+        for (State initialState : initialStates) {
+            runState.spt.add(initialState);
+        }
 
         // Priority Queue.
         // NOTE(flamholz): the queue is self-resizing, so we initialize it to have 
@@ -135,7 +138,9 @@ public class GenericAStar implements SPTService { // maybe this should be wrappe
         int initialSize = runState.rctx.graph.getVertices().size();
         initialSize = (int) Math.ceil(2 * (Math.sqrt((double) initialSize + 1)));
         runState.pq = qFactory.create(initialSize);
-        runState.pq.insert(initialState, 0);
+        for (State initialState : initialStates) {
+            runState.pq.insert(initialState, 0);
+        }
 
 //        options = options.clone();
 //        /** max walk distance cannot be less than distances to nearest transit stops */

@@ -15,9 +15,9 @@ package org.opentripplanner.api.ws;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.reset;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,6 +61,7 @@ import org.opentripplanner.api.model.transit.RouteDataList;
 import org.opentripplanner.api.model.transit.RouteList;
 import org.opentripplanner.api.model.transit.StopList;
 import org.opentripplanner.api.model.transit.StopTimeList;
+import org.opentripplanner.api.parameter.QualifiedModeSetSequence;
 import org.opentripplanner.api.ws.internals.Components;
 import org.opentripplanner.api.ws.internals.GraphInternals;
 import org.opentripplanner.api.ws.services.MetadataService;
@@ -103,8 +104,8 @@ import org.opentripplanner.routing.graph.Vertex;
 import org.opentripplanner.routing.impl.RetryingPathServiceImpl;
 import org.opentripplanner.routing.impl.StreetVertexIndexServiceImpl;
 import org.opentripplanner.routing.impl.TravelingSalesmanPathService;
-import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.services.AlertPatchService;
+import org.opentripplanner.routing.services.GraphService;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.vertextype.IntersectionVertex;
 import org.opentripplanner.routing.vertextype.PatternStopVertex;
@@ -242,7 +243,9 @@ class Context {
             }
         }
 
-        pathService.setSptService(new GenericAStar());
+        GenericAStar star = new GenericAStar();
+        star.setNPaths(1); // to make test results more deterministic, only find the single best path
+        pathService.setSptService(star);
         pathService.setGraphService(graphService);
         planGenerator.pathService = pathService;
 
@@ -260,7 +263,7 @@ class Context {
     private void initTransit() {
         GtfsGraphBuilderImpl gtfsBuilder = new GtfsGraphBuilderImpl();
         GtfsBundle bundle = new GtfsBundle();
-        bundle.setPath(new File("../otp-core/src/test/resources/google_transit.zip"));
+        bundle.setPath(new File("src/test/resources/google_transit.zip"));
 
         ArrayList<GtfsBundle> bundleList = new ArrayList<GtfsBundle>();
         bundleList.add(bundle);
@@ -281,7 +284,7 @@ class Context {
     }
 
     private void initBikeRental() {
-        BikeRentalStationService service = new BikeRentalStationService();
+        BikeRentalStationService service = graph.getService(BikeRentalStationService.class, true);
         BikeRentalStation station = new BikeRentalStation();
         station.x = -122.637634;
         station.y = 45.513084;
@@ -289,9 +292,7 @@ class Context {
         station.spacesAvailable = 4;
         station.id = "1";
         station.name = "bike rental station";
-
-        service.addStation(station);
-        graph.putService(BikeRentalStationService.class, service);
+        service.addBikeRentalStation(station);
     }
 
     private Graph makeSimpleGraph() {
@@ -1059,7 +1060,7 @@ public class TestRequest extends TestCase {
         TestPlanner planner = new TestPlanner("portland", "45.440947,-122.837645", "45.463966,-122.755822");
         planner.setMaxWalkDistance(Arrays.asList(Double.POSITIVE_INFINITY));
         planner.setWalkReluctance(Arrays.asList(1.0));
-        planner.setModes(Arrays.asList(new TraverseModeSet("BICYCLE,TRANSIT")));
+        planner.setModes(Arrays.asList(new QualifiedModeSetSequence("BICYCLE,TRANSIT")));
 
         Response response = planner.getItineraries();
         Itinerary itinerary = response.getPlan().itinerary.get(0);
@@ -1185,7 +1186,7 @@ public class TestRequest extends TestCase {
             this.walkReluctance = Arrays.asList(8.0);
             this.walkSpeed = Arrays.asList(1.33);
             this.optimize = Arrays.asList(OptimizeType.QUICK);
-            this.modes = Arrays.asList(new TraverseModeSet("WALK,TRANSIT"));
+            this.modes = Arrays.asList(new QualifiedModeSetSequence("WALK,TRANSIT"));
             this.numItineraries = Arrays.asList(1);
             this.transferPenalty = Arrays.asList(0);
             this.nonpreferredTransferPenalty = Arrays.asList(180);
@@ -1197,11 +1198,12 @@ public class TestRequest extends TestCase {
             this.graphService = Context.getInstance().graphService;
             this.planGenerator.graphService = Context.getInstance().graphService;
             this.prototypeRoutingRequest = new RoutingRequest();
+            this.numItineraries = Arrays.asList(1); // make results more deterministic by returning only one path
         }
 
         public TestPlanner(String routerId, String v1, String v2, List<String> intermediates) {
             this(routerId, v1, v2);
-            this.modes = Arrays.asList(new TraverseModeSet("WALK"));
+            this.modes = Arrays.asList(new QualifiedModeSetSequence("WALK"));
             this.intermediatePlaces = intermediates;
             TravelingSalesmanPathService tsp = new TravelingSalesmanPathService();
             tsp.setChainedPathService(Context.getInstance().pathService);
@@ -1241,7 +1243,7 @@ public class TestRequest extends TestCase {
             this.walkReluctance = walkReluctance;
         }
 
-        public void setModes(List<TraverseModeSet> modes) {
+        public void setModes(List<QualifiedModeSetSequence> modes) {
             this.modes = modes;
         }
 
