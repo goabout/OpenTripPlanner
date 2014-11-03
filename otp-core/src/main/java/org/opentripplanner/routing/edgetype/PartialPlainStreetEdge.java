@@ -39,19 +39,9 @@ public class PartialPlainStreetEdge extends PlainStreetEdge {
     private StreetEdge parentEdge;
 
     public PartialPlainStreetEdge(StreetEdge parentEdge, StreetVertex v1, StreetVertex v2,
-            LineString geometry, String name, double length, StreetTraversalPermission permission,
-            boolean back) {
-        super(v1, v2, geometry, name, length, permission, back, parentEdge.getCarSpeed());
-
-        this.parentEdge = parentEdge;
-    }
-    
-    /**
-     * Simplifies construction by copying some stuff from the parentEdge.
-     */
-    public PartialPlainStreetEdge(StreetEdge parentEdge, StreetVertex v1, StreetVertex v2,
             LineString geometry, String name, double length) {
-        this(parentEdge, v1, v2, geometry, name, length, parentEdge.getPermission(), false);
+        super(v1, v2, geometry, name, length, parentEdge.getPermission(), false, parentEdge.getCarSpeed());
+        this.parentEdge = parentEdge;
     }
     
     /**

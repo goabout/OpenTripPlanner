@@ -62,20 +62,7 @@ public class PartialPlainStreetEdgeTest {
     public void testConstruction() {
         StreetTraversalPermission perm = StreetTraversalPermission.ALL_DRIVING;
         PartialPlainStreetEdge pEdge = new PartialPlainStreetEdge(e1, v1, v2, e1.getGeometry(),
-                "partial e1", e1.getLength(), perm, true);
-
-        assertTrue(pEdge.isEquivalentTo(e1));
-        assertTrue(pEdge.isPartial());
-        assertTrue(pEdge.isBack());
-        assertFalse(pEdge.isReverseOf(e1));
-        assertTrue(pEdge.isReverseOf(e1Reverse));
-        assertEquals(e1.getId(), pEdge.getId());
-        assertEquals(perm, pEdge.getPermission());
-        assertEquals(e1.getCarSpeed(), pEdge.getCarSpeed(), 0.0);
-
-        // Simpler constructor - copies permission from parent edge and sets back to true.
-        pEdge = new PartialPlainStreetEdge(e1, v1, v2, e1.getGeometry(), "partial e1",
-                e1.getLength());
+                "partial e1", e1.getLength());
 
         assertTrue(pEdge.isEquivalentTo(e1));
         assertTrue(pEdge.isPartial());
