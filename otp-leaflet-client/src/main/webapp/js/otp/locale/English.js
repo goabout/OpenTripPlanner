@@ -458,39 +458,26 @@ otp.locale.English = {
 
         modes : // leaflet client
         {
-            "TRANSIT,WALK"      : "Transit", 
-            "BUSISH,WALK"       : "Bus Only", 
-            "TRAINISH,WALK"     : "Rail Only", 
-            "BICYCLE"           : 'Bicycle Only',
-            "WALK"              : 'Walk Only',
-            "TRANSIT,BICYCLE"   : "Bicycle &amp; Transit",
-            "CAR"               : 'Drive Only'
+            "TRANSIT,WALK"                                : "Transit",
+            "BUSISH,WALK"                                 : "Bus only",
+            "TRAINISH,WALK"                               : "Train only",
+            "WALK"                                        : "Walk only",
+            "BICYCLE"                                     : "Bicycle only",
+            "CAR"                                         : "Drive Only",
+            "BICYCLE_RENT,WALK"                           : "Rented Bicycle",
+            "BICYCLE_RENT,WALK;BICYCLE_RENT"              : "Rented Bicycle to destination",
+            "TRANSIT,BICYCLE"                             : "Transit & Bicycle",
+            "BICYCLE_RENT,TRANSIT,WALK"                   : "Transit & Rented Bicycle",
+            "BICYCLE_RENT,TRANSIT,WALK;BICYCLE_RENT"      : "Transit & Rented Bicycle to destination",
+            "CAR_PARK,WALK"                               : "P+R & Walk",
+            "CAR_PARK,TRANSIT,WALK"                       : "P+R & Transit",
+            "CAR_PARK,WALK,BICYCLE"                       : "P+R & Rented Bicycle",
+            "BICYCLE_PARK,WALK"                           : "Bike P+R & Walk",
+            "BICYCLE_PARK,WALK,TRANSIT"                   : "Bike P+R & Transit",
+            "BICYCLE_PARK_RENT,WALK"                      : "Bike P+R & Rented bicycle & Walk",
+            "BICYCLE_PARK_RENT,WALK;BICYCLE_RENT"         : "Bike P+R & Rented bicycle to destination",
+            "BICYCLE_PARK_RENT,WALK,TRANSIT;BICYCLE_RENT" : "Bike P+R & Transit & Rented bicycle to destination"
         },
-
-        mode : // OL client
-        [
-            ['TRANSIT,WALK', 'Transit'],
-            ['BUSISH,WALK', 'Bus only'],
-            ['TRAINISH,WALK', 'Train only'],
-            ['WALK', 'Walk only'],
-            ['BICYCLE', 'Bicycle only'],
-            ['TRANSIT,BICYCLE', 'Transit & Bicycle']
-        ],
-
-        // TODO: remove this hack, and provide code that allows the mode array to be configured with different transit modes.
-        //       (note that we've been broken for awhile here, since many agencies don't have a 'Train' mode either...this needs attention)
-        // IDEA: maybe we start with a big array (like below), and the pull out modes from this array when turning off various modes...
-        with_bikeshare_mode : 
-        [
-            ['TRANSIT,WALK', 'Transit'],
-            ['BUSISH,WALK', 'Bus only'],
-            ['TRAINISH,WALK', 'Train only'],
-            ['WALK', 'Walk only'],
-            ['BICYCLE', 'Bicycle only'],
-            ['WALK,BICYCLE', 'Rented Bicycle'],
-            ['TRANSIT,BICYCLE', 'Transit & Bicycle'],
-            ['TRANSIT,WALK,BICYCLE', 'Transit & Rented Bicycle']
-        ],
 
         wheelchair :
         [
