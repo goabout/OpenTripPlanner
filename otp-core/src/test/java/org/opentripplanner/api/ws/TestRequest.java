@@ -743,7 +743,7 @@ public class TestRequest extends TestCase {
 
         Response response = planner.getItineraries();
         Itinerary itinerary = response.getPlan().itinerary.get(0);
-        Double duration = itinerary.duration;
+        Long duration = itinerary.duration;
 
         // Some walking is expected here, because it's slightly faster than staying onboard the bus.
         assertTrue(itinerary.walkDistance > 0);
@@ -1064,7 +1064,7 @@ public class TestRequest extends TestCase {
 
         Response response = planner.getItineraries();
         Itinerary itinerary = response.getPlan().itinerary.get(0);
-        Double duration = itinerary.duration;
+        Long duration = itinerary.duration;
 
         // Add a time penalty without changing the cost
         planner.setBikeSwitchTime(Arrays.asList(30));
