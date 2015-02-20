@@ -47,7 +47,11 @@ public class CommandLineParameters {
     @Parameter(names = { "-v", "--verbose" }, 
     description = "Verbose output")
     boolean verbose;
-   
+
+    @Parameter(names = { "--version" },
+    description = "Outputs version information")
+    boolean version;
+
     /* Options for the graph builder sub-task. */
 
     @Parameter(names = {"-b", "--build"}, validateWith = ReadableDirectory.class, 

@@ -13,6 +13,8 @@
 
 package org.opentripplanner.standalone;
 
+import org.opentripplanner.common.MavenVersion;
+import org.opentripplanner.csvexporter.CsvExporter;
 import org.opentripplanner.graph_builder.GraphBuilderTask;
 import org.opentripplanner.visualizer.GraphVisualizer;
 import org.opentripplanner.csvexporter.CsvExporter;
@@ -46,6 +48,12 @@ public class OTPMain {
             if (params.help) {
                 jc.setProgramName("java -Xmx[several]G -jar otp.jar");
                 jc.usage();
+                System.exit(0);
+            }
+
+            if (params.version) {
+                MavenVersion version = MavenVersion.VERSION;
+                System.out.println(version.toListing());
                 System.exit(0);
             }
             params.infer();
