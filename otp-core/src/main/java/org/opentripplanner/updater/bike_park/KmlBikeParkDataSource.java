@@ -38,6 +38,9 @@ public class KmlBikeParkDataSource implements BikeParkDataSource, PreferencesCon
     private static final Logger LOG = LoggerFactory.getLogger(KmlBikeParkDataSource.class);
 
     @Setter
+    private boolean zip;
+
+    @Setter
     private String url;
 
     @Setter
@@ -84,7 +87,7 @@ public class KmlBikeParkDataSource implements BikeParkDataSource, PreferencesCon
      */
     @Override
     public boolean update() {
-        List<BikePark> newBikeParks = xmlDownloader.download(url);
+        List<BikePark> newBikeParks = xmlDownloader.download(url, zip);
         if (newBikeParks != null) {
             synchronized (this) {
                 // Update atomically
@@ -107,10 +110,12 @@ public class KmlBikeParkDataSource implements BikeParkDataSource, PreferencesCon
 
     @Override
     public void configure(Graph graph, Preferences preferences) {
+        String zip = preferences.get("zip", "false");
         String url = preferences.get("url", null);
         if (url == null)
             throw new IllegalArgumentException("Missing mandatory 'url' configuration.");
         setUrl(url);
         setNamePrefix(preferences.get("namePrefix", null));
+        if (zip.equals("true")) setZip(true);
     }
 }
