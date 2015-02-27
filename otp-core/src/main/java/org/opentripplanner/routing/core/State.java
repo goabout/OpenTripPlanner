@@ -40,6 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class State implements Cloneable {
+
+    private static boolean ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES = false;
+
     /* Data which is likely to change at most traversals */
     
     // the current time at this state, in milliseconds
@@ -171,13 +174,11 @@ public class State implements Cloneable {
         List<State> states = new ArrayList<State>(4);
         State state0 = new State(vertex, backEdge, timeSeconds, options);
         states.add(state0);
-        if (options.bikeParkAndRide) {
+        if (options.bikeParkAndRide && ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES) {
             if (options.arriveBy) {
                 /*
                  * This state represent the alternative where the shortest path make you bike until
-                 * the end, thus no P+R. TODO Since this rely on the rider to keep his bike up to
-                 * the end, which may not be possible, add a qualified mode parameter to
-                 * specifically enable this?
+                 * the end, thus no P+R.
                  */
                 State alternate = new State(vertex, backEdge, timeSeconds, options);
                 alternate.stateData.bikeParked = false;
@@ -368,7 +369,14 @@ public class State implements Cloneable {
                 bikeRentalOk = !isBikeRenting();
             }
         } else {
-            // Bike P+R is always OK, allow user to finish with his own bike w/o parking
+            if (bikeParkAndRide) {
+                if (ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES) {
+                    // Allow the user to finish with his own bike w/o parking
+                } else {
+                    // Force user to finish with his bike parked in bike P+R
+                    bikeParkAndRideOk = isBikeParked();
+                }
+            }
             if (checkPark)
                 carParkAndRideOk = isCarParked();
             // In end renting mode, the end condition is either renting or not,
