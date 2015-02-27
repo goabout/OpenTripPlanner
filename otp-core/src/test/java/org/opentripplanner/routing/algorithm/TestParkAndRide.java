@@ -132,12 +132,6 @@ public class TestParkAndRide extends TestCase {
         options.setRoutingContext(graph, B, D);
         ShortestPathTree tree = aStar.getShortestPathTree(options);
         GraphPath path = tree.getPath(D, false);
-        // Note: the assertions below depends on allowing ending with bike in bike P+R mode
-        assertNotNull(path);
-        State s = tree.getState(D);
-        assertFalse(s.isBikeParked());
-        // Final state is bicycling your own bike.
-        assertTrue(s.getNonTransitMode() == TraverseMode.BICYCLE);
 
         // So we add a bike P+R at C.
         BikePark bpc = new BikePark();
@@ -162,7 +156,7 @@ public class TestParkAndRide extends TestCase {
         tree = aStar.getShortestPathTree(options);
         path = tree.getPath(D, false);
         assertNotNull(path);
-        s = tree.getState(D);
+        State s = tree.getState(D);
         assertFalse(s.isBikeParked());
         assertTrue(s.isBackWalkingBike());
 
