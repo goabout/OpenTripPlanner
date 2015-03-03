@@ -116,7 +116,14 @@ public class State implements Cloneable {
         return buildStates(options.rctx.origin, options.rctx.originBackEdge,
                 options.getSecondsSinceEpoch(), options);
     }
-    
+
+    /**
+     * Same method as buildStates, specifying the initial vertex.
+     */
+    public static Collection<State> buildStates(Vertex vertex, RoutingRequest options) {
+        return buildStates(vertex, null, options.getSecondsSinceEpoch(), options);
+    }
+
     /**
      * Check if you are allowed to build a single state from this options (ie no multiple states would be returned).
      */
@@ -197,7 +204,8 @@ public class State implements Cloneable {
                 states.add(alternate);
             }
         }
-        if (options.allowBikeRental && options.endRentingBike && options.arriveBy) {
+        if (options.allowBikeRental && options.endRentingBike && options.arriveBy
+                && ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES) {
             /*
              * This state represent the alternative where the shortest path make you walk from the
              * last transit stop to your destination (this is quite often the optimal solution).
@@ -383,7 +391,8 @@ public class State implements Cloneable {
             // to allow for short walk segments at the end when walking from the
             // end station to the destination is better/faster.
             if (bikeRental)
-                bikeRentalOk = endRentingBike ? true : !isBikeRenting();
+                bikeRentalOk = endRentingBike ? (ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES ? true
+                        : isBikeRenting()) : !isBikeRenting();
         }
         return bikeRentalOk && bikeParkAndRideOk && carParkAndRideOk;
     }
