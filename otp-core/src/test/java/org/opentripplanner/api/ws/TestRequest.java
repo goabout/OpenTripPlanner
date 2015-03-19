@@ -569,8 +569,9 @@ public class TestRequest extends TestCase {
                 -122.578918, false, routerId, null);
         assertTrue(stopsNearPoint.stops.size() > 0);
 
-        long startTime = TestUtils.dateInSeconds("America/Los_Angeles", 2009, 9, 1, 7, 50, 0);
-        long endTime = startTime + 60 * 60;
+        long startTime =
+                TestUtils.dateInSeconds("America/Los_Angeles", 2009, 9, 1, 7, 50, 0) * 1000L;
+        long endTime = startTime + 60 * 60 * 1000;
         StopTimeList stopTimesForStop = (StopTimeList) index.getStopTimesForStop("TriMet", "10579",
                 startTime, endTime, false, false, null, routerId);
         assertTrue(stopTimesForStop.stopTimes.size() > 0);

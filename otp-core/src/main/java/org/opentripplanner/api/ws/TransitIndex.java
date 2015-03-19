@@ -349,7 +349,7 @@ public class TransitIndex {
     }
 
     /**
-     * Return stop times for a stop, in seconds since the epoch.
+     * Return stop times for a stop, in seconds since the epoch startTime and endTime are in milliseconds since epoch
      */
     @GET
     @Path("/stopTimesForStop")
@@ -360,10 +360,13 @@ public class TransitIndex {
             @QueryParam("references") Boolean references, @QueryParam("routeId") String routeId,
             @QueryParam("routerId") String routerId) throws JSONException {
 
+        startTime /= 1000;
 
         if (endTime == null) {
             endTime = startTime + 86400;
-        } 
+        } else {
+            endTime /= 1000;
+        }
 
         if (endTime - startTime > MAX_STOP_TIME_QUERY_INTERVAL) {
             return new TransitError("Max stop time query interval is " + (endTime - startTime)
@@ -465,6 +468,7 @@ public class TransitIndex {
 
     /**
      * Return stop times for all stops comprising a station, in seconds since the epoch
+     * startTime and endTime are in milliseconds since epoch
      */
     @GET
     @Path("/stopTimesForStation")
@@ -580,7 +584,7 @@ public class TransitIndex {
     }
 
     /**
-     * Return subsequent stop times for a trip; time is in seconds since epoch
+     * Return subsequent stop times for a trip; time is in milliseconds since epoch
      */
     @GET
     @Path("/stopTimesForTrip")
@@ -590,6 +594,8 @@ public class TransitIndex {
             @QueryParam("tripId") String tripId, @QueryParam("time") long time,
             @QueryParam("extended") Boolean extended, @QueryParam("routerId") String routerId)
             throws JSONException {
+
+        time /= 1000;
 
         AgencyAndId firstStop = null;
         if (stopId != null) {
@@ -1160,15 +1166,13 @@ public class TransitIndex {
      * @return 3 service days: yesterday, today and tomorrow for an agency.
      */
     private List<ServiceDay> getServiceDays(Graph graph, long epochSec, String agencyId) {
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date(epochSec * 1000));
-        c.setTimeZone(graph.getTimeZone());
-
-        ServiceDate serviceDate = new ServiceDate(c);
+        final long SEC_IN_DAY = 60 * 60 * 24;
         List<ServiceDay> serviceDays = new ArrayList<ServiceDay>(3);
-        serviceDays.add(new ServiceDay(graph, serviceDate.previous(), graph.getCalendarService(), agencyId));
-        serviceDays.add(new ServiceDay(graph, serviceDate, graph.getCalendarService(), agencyId));
-        serviceDays.add(new ServiceDay(graph, serviceDate.next(), graph.getCalendarService(), agencyId));
+        serviceDays.add(new ServiceDay(graph, epochSec - SEC_IN_DAY, graph.getCalendarService(),
+                agencyId));
+        serviceDays.add(new ServiceDay(graph, epochSec, graph.getCalendarService(), agencyId));
+        serviceDays.add(new ServiceDay(graph, epochSec + SEC_IN_DAY, graph.getCalendarService(),
+                agencyId));
         return serviceDays;
     }
 
