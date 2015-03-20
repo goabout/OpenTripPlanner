@@ -66,7 +66,7 @@ public class QualifiedModeSetSequence {
                     if (qMode.qualifiers.contains(Qualifier.PARK)) {
                         req.parkAndRide = true;
                     } else {
-                        req.kissAndRide = true;
+                        req.kissAndRide = sets.size() > 1;
                     }
                 }
             }
