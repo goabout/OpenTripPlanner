@@ -96,4 +96,4 @@
     <requestParameters><entry><key>optimize</key><value>QUICK</value></entry><entry><key>time</key><value>3:08 pm</value></entry><entry><key>wheelchair</key><value>false</value></entry><entry><key>maxWalkDistance</key><value>840.0</value></entry><entry><key>routerId</key><value></value></entry><entry>
           <key>fromPlace</key><value>45.5097,-122.71629</value></entry><entry>
           <key>toPlace</key><value>45.521253,-122.977271</value></entry><entry>
-          <key>date</key><value>08/26/2011</value></entry><entry><key>mode</key><value>TraverseMode (WALK, TRAM, SUBWAY, RAIL, BUS, FERRY, CABLE_CAR, GONDOLA, FUNICULAR, TRANSIT, TRAINISH, BUSISH)</value></entry><entry><key>numItineraries</key><value>3</value></entry></requestParameters></response>
+          <key>date</key><value>08/26/2011</value></entry><entry><key>mode</key><value>TraverseMode (WALK, TRAM, SUBWAY, RAIL, BUS, FERRY, CABLECAR, GONDOLA, FUNICULAR, TRANSIT, TRAINISH, BUSISH)</value></entry><entry><key>numItineraries</key><value>3</value></entry></requestParameters></response>

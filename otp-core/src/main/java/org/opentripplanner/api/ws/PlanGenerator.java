@@ -299,7 +299,7 @@ public class PlanGenerator {
 
     /**
      * Slice a {@link State} array at the leg boundaries. Leg switches occur when:
-     * 1. A LEG_SWITCH mode (which itself isn't part of any leg) is seen
+     * 1. A LEGSWITCH mode (which itself isn't part of any leg) is seen
      * 2. The mode changes otherwise, for instance from BICYCLE to WALK
      * 3. A PatternInterlineDwell edge (i.e. interlining) is seen
      *
@@ -318,10 +318,10 @@ public class PlanGenerator {
 
             Edge edge = states[i + 1].getBackEdge();
 
-            if (backMode == TraverseMode.LEG_SWITCH || forwardMode == TraverseMode.LEG_SWITCH) {
-                if (backMode != TraverseMode.LEG_SWITCH) {              // Start of leg switch
+            if (backMode == TraverseMode.LEGSWITCH || forwardMode == TraverseMode.LEGSWITCH) {
+                if (backMode != TraverseMode.LEGSWITCH) {              // Start of leg switch
                     legIndexPairs[1] = i;
-                } else if (forwardMode != TraverseMode.LEG_SWITCH) {    // End of leg switch
+                } else if (forwardMode != TraverseMode.LEGSWITCH) {    // End of leg switch
                     if (legIndexPairs[1] != states.length - 1) {
                         legsIndexes.add(legIndexPairs);
                     }
@@ -513,14 +513,14 @@ public class PlanGenerator {
                     itinerary.transitTime += state.getTimeDeltaSeconds();
                     break;
 
-                case LEG_SWITCH:
+                case LEGSWITCH:
                     itinerary.waitingTime += state.getTimeDeltaSeconds();
                     break;
 
                 case WALK:
                 case BICYCLE:
                 case CAR:
-                case CUSTOM_MOTOR_VEHICLE:
+                case CUSTOMMOTORVEHICLE:
                     itinerary.walkTime += state.getTimeDeltaSeconds();
             }
         }

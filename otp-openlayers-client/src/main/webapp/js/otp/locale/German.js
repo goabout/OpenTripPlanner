@@ -199,7 +199,7 @@ otp.locale.German = {
         RAIL:           "Eisenbahn",
         BUS:            "Bus",
         FERRY:          "Fähre",
-        CABLE_CAR:      "Standseilbahn",
+        CABLECAR:       "Standseilbahn",
         GONDOLA:        "Seilbahn",
         FUNICULAR:      "Standseilbahn"
     },

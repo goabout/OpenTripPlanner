@@ -249,7 +249,7 @@ public class TurnCostTest {
 
     private void DisallowTurn(PlainStreetEdge from, PlainStreetEdge to) {
         TurnRestrictionType rType = TurnRestrictionType.NO_TURN;
-        TraverseModeSet restrictedModes = new TraverseModeSet(TraverseMode.CAR, TraverseMode.CUSTOM_MOTOR_VEHICLE);
+        TraverseModeSet restrictedModes = new TraverseModeSet(TraverseMode.CAR, TraverseMode.CUSTOMMOTORVEHICLE);
         TurnRestriction restrict = new TurnRestriction(from, to, rType, restrictedModes);
         from.addTurnRestriction(restrict);
     }

@@ -267,7 +267,7 @@ public class Leg {
         else if (mode.equals(TraverseMode.WALK.toString())) return false;
         else if (mode.equals(TraverseMode.CAR.toString())) return false;
         else if (mode.equals(TraverseMode.BICYCLE.toString())) return false;
-        else if (mode.equals(TraverseMode.CUSTOM_MOTOR_VEHICLE.toString())) return false;
+        else if (mode.equals(TraverseMode.CUSTOMMOTORVEHICLE.toString())) return false;
         else return true;
     }
     

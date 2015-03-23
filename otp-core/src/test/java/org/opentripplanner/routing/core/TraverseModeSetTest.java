@@ -34,7 +34,7 @@ public class TraverseModeSetTest {
 
     @Test
     public void testCustomVehicleMode() {
-        TraverseModeSet modeSet = new TraverseModeSet(TraverseMode.CUSTOM_MOTOR_VEHICLE);
+        TraverseModeSet modeSet = new TraverseModeSet(TraverseMode.CUSTOMMOTORVEHICLE);
         
         assertTrue(modeSet.getCustomMotorVehicle());
         assertTrue(modeSet.getDriving());

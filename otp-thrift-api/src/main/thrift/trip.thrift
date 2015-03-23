@@ -22,7 +22,7 @@ typedef location.Location Location
 // Modes of travel. 
 enum TravelMode {
 	BICYCLE, WALK,
-	CAR, CUSTOM_MOTOR_VEHICLE,
+	CAR, CUSTOMMOTORVEHICLE,
 	TRAM, SUBWAY,
 	RAIL, ANY_TRAIN, ANY_TRANSIT
 }

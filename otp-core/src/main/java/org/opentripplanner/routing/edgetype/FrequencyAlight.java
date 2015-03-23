@@ -202,7 +202,7 @@ public class FrequencyAlight extends Edge {
             s1.incrementWeight(preferences_penalty);
             s1.incrementWeight(transferPenalty);
             s1.incrementWeight(wait_cost + options.getBoardCost(mode));
-            s1.setBackMode(TraverseMode.LEG_SWITCH);
+            s1.setBackMode(TraverseMode.LEGSWITCH);
             return s1.makeState();
         } else {
             /* forward traversal: not so much to do */
@@ -219,7 +219,7 @@ public class FrequencyAlight extends Edge {
             s1.setTripId(null);
             s1.setLastAlightedTimeSeconds(state0.getTimeSeconds());
             s1.setPreviousStop(((TransitVertex) fromv).getStop());
-            s1.setBackMode(TraverseMode.LEG_SWITCH);
+            s1.setBackMode(TraverseMode.LEGSWITCH);
             return s1.makeState();
         }
     }
@@ -227,7 +227,7 @@ public class FrequencyAlight extends Edge {
     public State optimisticTraverse(State state0) {
         StateEditor s1 = state0.edit(this);
         // no cost (see patternalight)
-        s1.setBackMode(TraverseMode.LEG_SWITCH);
+        s1.setBackMode(TraverseMode.LEGSWITCH);
         return s1.makeState();
     }
 

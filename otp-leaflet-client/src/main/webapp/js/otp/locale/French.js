@@ -277,7 +277,7 @@ otp.locale.French = {
         RAIL : "Train",
         BUS : "Bus",
         FERRY : "Ferry",
-        CABLE_CAR : "Tramway funiculaire",
+        CABLECAR : "Tramway funiculaire",
         GONDOLA : "Téléphérique",
         FUNICULAR : "Funiculaire"
     },

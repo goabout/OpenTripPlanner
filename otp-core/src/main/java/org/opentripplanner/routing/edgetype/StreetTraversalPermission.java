@@ -37,9 +37,9 @@ public enum StreetTraversalPermission {
     PEDESTRIAN_AND_BICYCLE_AND_CAR(4 | 2 | 1),
     // This is a configurable motor vehicle that is not a vanilla car.
     // e.g. truck, motor bike, etc.
-    CUSTOM_MOTOR_VEHICLE(8),
-    PEDESTRIAN_AND_CUSTOM_MOTOR_VEHICLE(8 | 1),
-    BICYCLE_AND_CUSTOM_MOTOR_VEHICLE(8 | 2),
+    CUSTOMMOTORVEHICLE(8),
+    PEDESTRIAN_AND_CUSTOMMOTORVEHICLE(8 | 1),
+    BICYCLE_AND_CUSTOMMOTORVEHICLE(8 | 2),
     PEDESTRIAN_BICYCLE_MOTOR(8 | 2 | 1),
     ALL_DRIVING(8 | 4),
     PEDESTRIAN_AND_DRIVING(8 | 4 | 1),
@@ -94,7 +94,7 @@ public enum StreetTraversalPermission {
         } else if (modes.getCar() && allows(StreetTraversalPermission.CAR)) {
             return true;
         } else if (modes.getCustomMotorVehicle()
-                && allows(StreetTraversalPermission.CUSTOM_MOTOR_VEHICLE)) {
+                && allows(StreetTraversalPermission.CUSTOMMOTORVEHICLE)) {
             return true;
         }
         return false;
@@ -112,8 +112,8 @@ public enum StreetTraversalPermission {
             return true;
         } else if (mode == TraverseMode.CAR && allows(StreetTraversalPermission.CAR)) {
             return true;
-        } else if (mode == TraverseMode.CUSTOM_MOTOR_VEHICLE
-                && allows(StreetTraversalPermission.CUSTOM_MOTOR_VEHICLE)) {
+        } else if (mode == TraverseMode.CUSTOMMOTORVEHICLE
+                && allows(StreetTraversalPermission.CUSTOMMOTORVEHICLE)) {
             return true;
         }
         return false;

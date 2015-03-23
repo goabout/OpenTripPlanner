@@ -24,11 +24,11 @@ import java.util.Set;
 public enum TraverseMode {
     WALK, BICYCLE, CAR,
     TRAM, SUBWAY, RAIL, BUS, FERRY,
-    CABLE_CAR, GONDOLA, FUNICULAR,
-    TRANSIT, TRAINISH, BUSISH, LEG_SWITCH,
+    CABLECAR, GONDOLA, FUNICULAR,
+    TRANSIT, TRAINISH, BUSISH, LEGSWITCH,
     // A motor vehicle that requires custom configuration
     // e.g. a truck, motor bike, airport shuttle service.
-    CUSTOM_MOTOR_VEHICLE;
+    CUSTOMMOTORVEHICLE;
 
     private static HashMap <Set<TraverseMode>, Set<TraverseMode>> setMap = 
             new HashMap <Set<TraverseMode>, Set<TraverseMode>>();
@@ -49,16 +49,16 @@ public enum TraverseMode {
 
     public boolean isTransit() {
         return this == TRAM || this == SUBWAY || this == RAIL || this == BUS || this == FERRY
-                || this == CABLE_CAR || this == GONDOLA || this == FUNICULAR || this == TRANSIT
+                || this == CABLECAR || this == GONDOLA || this == FUNICULAR || this == TRANSIT
                 || this == TRAINISH || this == BUSISH;
     }
 
     public boolean isOnStreetNonTransit() {
-        return this == WALK || this == BICYCLE || this == CAR || this == CUSTOM_MOTOR_VEHICLE;
+        return this == WALK || this == BICYCLE || this == CAR || this == CUSTOMMOTORVEHICLE;
     }
     
     public boolean isDriving() {
-        return this == CAR || this == CUSTOM_MOTOR_VEHICLE;
+        return this == CAR || this == CUSTOMMOTORVEHICLE;
     }
 
 }

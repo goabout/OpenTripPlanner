@@ -2275,7 +2275,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
             }
 
             TraverseModeSet modes = new TraverseModeSet(TraverseMode.BICYCLE, TraverseMode.CAR,
-                    TraverseMode.CUSTOM_MOTOR_VEHICLE);
+                    TraverseMode.CUSTOMMOTORVEHICLE);
             String exceptModes = relation.getTag("except");
             if (exceptModes != null) {
                 for (String m : exceptModes.split(";")) {

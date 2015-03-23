@@ -202,7 +202,7 @@ otp.locale.Hebrew = {
         RAIL:           "רכבת",
         BUS:            "אוטובוס",
         FERRY:          "מעבורת",
-        CABLE_CAR:      "רכבל",
+        CABLECAR:       "רכבל",
         GONDOLA:        "גונדולה",
         FUNICULAR:      "פוניקולר"
     },

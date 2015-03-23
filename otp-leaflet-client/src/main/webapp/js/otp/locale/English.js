@@ -282,7 +282,7 @@ otp.locale.English = {
         RAIL:           "Rail",
         BUS:            "Bus",
         FERRY:          "Ferry",
-        CABLE_CAR:      "Cable Car",
+        CABLECAR:       "Cable Car",
         GONDOLA:        "Gondola",
         FUNICULAR:      "Funicular"
     },

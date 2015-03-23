@@ -197,7 +197,7 @@ otp.locale.Italian = {
         RAIL:           "FERROVIA",
         BUS:            "BUS",
         FERRY:          "TRAGHETO",
-        CABLE_CAR:      "FUNIVIA",
+        CABLECAR:       "FUNIVIA",
         GONDOLA:        "GONDOLA",
         FUNICULAR:      "FUNICOLARE"
     },

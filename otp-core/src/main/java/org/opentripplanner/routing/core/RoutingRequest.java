@@ -1020,7 +1020,7 @@ public class RoutingRequest implements Cloneable, Serializable {
             return bikeSpeed;
         case CAR:
             return carSpeed;
-        case CUSTOM_MOTOR_VEHICLE:
+        case CUSTOMMOTORVEHICLE:
             return carSpeed;
         default:
             break;

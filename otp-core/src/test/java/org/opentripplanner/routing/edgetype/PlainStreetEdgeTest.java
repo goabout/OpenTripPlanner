@@ -121,7 +121,7 @@ public class PlainStreetEdgeTest {
         e1.setCarSpeed(10.0f);
 
         RoutingRequest options = proto.clone();
-        options.setMode(TraverseMode.CUSTOM_MOTOR_VEHICLE);
+        options.setMode(TraverseMode.CUSTOMMOTORVEHICLE);
         options.setRoutingContext(_graph, v1, v2);
         
         State s0 = new State(options);

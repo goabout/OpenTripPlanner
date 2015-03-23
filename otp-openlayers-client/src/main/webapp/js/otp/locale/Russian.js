@@ -196,7 +196,7 @@ otp.locale.Russian = {
         RAIL:           "Поезд",
         BUS:            "Автобус",
         FERRY:          "Паром",
-        CABLE_CAR:      "Канатная дорога",
+        CABLECAR:       "Канатная дорога",
         GONDOLA:        "Гондола",
         FUNICULAR:      "Фуникулер"
     },
