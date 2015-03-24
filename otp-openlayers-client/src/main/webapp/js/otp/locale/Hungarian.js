@@ -199,7 +199,7 @@ otp.locale.Hungarian = {
         RAIL:           "VASÚT",
         BUS:            "BUSZ",
         FERRY:          "KOMP",
-        CABLE_CAR:      "LIBEGŐ",
+        CABLECAR:       "LIBEGŐ",
         GONDOLA:        "GONDOLA",
         FUNICULAR:      "SIKLÓ"
     },

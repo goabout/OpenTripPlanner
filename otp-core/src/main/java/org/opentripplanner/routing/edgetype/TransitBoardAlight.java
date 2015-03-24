@@ -104,7 +104,7 @@ public class TransitBoardAlight extends TablePatternEdge implements OnboardEdge 
     }
 
     public TraverseMode getMode() {
-        return TraverseMode.LEG_SWITCH;
+        return TraverseMode.LEGSWITCH;
     }
 
     public String getName() {

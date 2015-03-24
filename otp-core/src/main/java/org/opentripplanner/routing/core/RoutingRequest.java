@@ -30,6 +30,7 @@ import lombok.Setter;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
+import org.opentripplanner.api.parameter.QualifiedModeSetSequence;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.common.model.GenericLocation;
 import org.opentripplanner.common.model.NamedPlace;
@@ -101,7 +102,7 @@ public class RoutingRequest implements Cloneable, Serializable {
     public double maxWeight = Double.MAX_VALUE;
 
     /** The set of TraverseModes that a user is willing to use. Defaults to WALK | TRANSIT. */
-    public TraverseModeSet modes = new TraverseModeSet("TRANSIT,WALK"); // defaults in constructor
+    private TraverseModeSet modes = new TraverseModeSet("TRANSIT,WALK"); // defaults in constructor
 
     /** The set of characteristics that the user wants to optimize for -- defaults to QUICK, or optimize for transit time. */
     public OptimizeType optimize = OptimizeType.QUICK;
@@ -199,6 +200,12 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     /** Cost of dropping-off a rented bike */
     public int bikeRentalDropoffCost = 30;
+
+    /** Time to park a bike */
+    public int bikeParkTime = 60;
+
+    /** Cost of parking a bike. */
+    public int bikeParkCost = 120;
 
     /**
      * Time to park a car in a park and ride, w/o taking into account driving and walking cost
@@ -382,6 +389,26 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     private boolean walkingBike;
 
+	private double heuristicWeight = 1.0;
+	
+	private boolean softWalkLimiting = false;
+	
+	private double softWalkPenalty = 60.0; // a jump in cost when stepping over the walking limit
+	private double softWalkOverageRate = 5.0; // a jump in cost for every meter over the walking limit
+
+    /*
+     * Additional flags affecting mode transitions. This is a temporary solution, as it only covers
+     * parking and rental at the beginning of the trip.
+     */
+    public boolean allowBikeRental = false;
+    public boolean endRentingBike = false;
+    public boolean bikeParkAndRide = false;
+    public boolean parkAndRide = false;
+    public boolean kissAndRide = false;
+
+    /** Weight multiplier for pre-transit travel when using drive-to-transit (park and ride or kiss and ride). */
+    public double firstLegReluctance = 5;
+
     /* CONSTRUCTORS */
 
     /** Constructor for options; modes defaults to walk and transit */
@@ -391,7 +418,7 @@ public class RoutingRequest implements Cloneable, Serializable {
         bikeSpeed = 5; // 5 m/s, ~11 mph, a random bicycling speed
         // http://en.wikipedia.org/wiki/Speed_limit
         carSpeed = 40; // 40 m/s, 144 km/h, above the maximum (finite) driving speed limit worldwide
-        setModes(new TraverseModeSet(new TraverseMode[] { TraverseMode.WALK, TraverseMode.TRANSIT }));
+        setModes(new TraverseModeSet(TraverseMode.WALK, TraverseMode.TRANSIT));
         bikeWalkingOptions = this;
 
         // So that they are never null.
@@ -402,6 +429,16 @@ public class RoutingRequest implements Cloneable, Serializable {
     public RoutingRequest(TraverseModeSet modes) {
         this();
         this.setModes(modes);
+    }
+
+    public RoutingRequest(QualifiedModeSetSequence qmodes) {
+        this();
+        qmodes.applyToRequest(this);
+    }
+
+    public RoutingRequest(String qmodes) {
+        this();
+        new QualifiedModeSetSequence(qmodes).applyToRequest(this);
     }
 
     public RoutingRequest(TraverseMode mode) {
@@ -983,7 +1020,7 @@ public class RoutingRequest implements Cloneable, Serializable {
             return bikeSpeed;
         case CAR:
             return carSpeed;
-        case CUSTOM_MOTOR_VEHICLE:
+        case CUSTOMMOTORVEHICLE:
             return carSpeed;
         default:
             break;
@@ -1134,4 +1171,5 @@ public class RoutingRequest implements Cloneable, Serializable {
 
     	return preferences_penalty;
     }
+
 }

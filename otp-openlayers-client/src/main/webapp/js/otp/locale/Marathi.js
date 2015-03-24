@@ -203,7 +203,7 @@ otp.locale.Marathi = {
         RAIL:           "RAIL",
         BUS:            "BUS",
         FERRY:          "FERRY",
-        CABLE_CAR:      "CABLE CAR",
+        CABLECAR:       "CABLE CAR",
         GONDOLA:        "GONDOLA",
         FUNICULAR:      "FUNICULAR"
     },

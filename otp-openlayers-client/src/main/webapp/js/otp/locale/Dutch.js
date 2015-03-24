@@ -199,7 +199,7 @@ otp.locale.Dutch = {
         RAIL:           "Trein",
         BUS:            "Bus",
         FERRY:          "Veer",
-        CABLE_CAR:      "Kabeltram",
+        CABLECAR:       "Kabeltram",
         GONDOLA:        "Cabinelift",
         FUNICULAR:      "Kabelspoorweg"
     },

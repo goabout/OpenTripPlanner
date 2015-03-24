@@ -19,9 +19,9 @@ import java.util.Set;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
+import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.trippattern.TripTimes;
-import org.opentripplanner.routing.patch.Alert;
 
 /**
  * StateData contains the components of search state that are unlikely to be changed as often as
@@ -48,13 +48,13 @@ public class StateData implements Cloneable {
 
     protected int numBoardings;
 
-    protected boolean alightedLocal;
-
     protected boolean everBoarded;
 
     protected boolean usingRentedBike;
 
     protected boolean carParked;
+    
+    protected boolean bikeParked;
     
     protected Stop previousStop;
 
@@ -109,7 +109,7 @@ public class StateData implements Cloneable {
         if (modes.getCar())
             nonTransitMode = TraverseMode.CAR;
         else if (modes.getCustomMotorVehicle())
-            nonTransitMode = TraverseMode.CUSTOM_MOTOR_VEHICLE;
+            nonTransitMode = TraverseMode.CUSTOMMOTORVEHICLE;
         else if (modes.getWalk())
             nonTransitMode =  TraverseMode.WALK;
         else if (modes.getBicycle())

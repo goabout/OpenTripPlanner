@@ -201,7 +201,7 @@ otp.locale.Turkish = {
         RAIL:           "Tren",
         BUS:            "Otobüs",
         FERRY:          "Feribot",
-        CABLE_CAR:      "Teleferik",
+        CABLECAR:       "Teleferik",
         GONDOLA:        "Gondol",
         FUNICULAR:      "Funiküler"
     },

@@ -56,6 +56,8 @@ import org.opentripplanner.openstreetmap.model.OSMWay;
 import org.opentripplanner.openstreetmap.model.OSMWithTags;
 import org.opentripplanner.openstreetmap.services.OpenStreetMapContentHandler;
 import org.opentripplanner.openstreetmap.services.OpenStreetMapProvider;
+import org.opentripplanner.routing.alertpatch.Alert;
+import org.opentripplanner.routing.alertpatch.TranslatedString;
 import org.opentripplanner.routing.algorithm.GenericDijkstra;
 import org.opentripplanner.routing.algorithm.strategies.SkipEdgeStrategy;
 import org.opentripplanner.routing.bike_rental.BikeRentalStation;
@@ -82,8 +84,6 @@ import org.opentripplanner.routing.edgetype.StreetTraversalPermission;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.Vertex;
-import org.opentripplanner.routing.patch.Alert;
-import org.opentripplanner.routing.patch.TranslatedString;
 import org.opentripplanner.routing.spt.GraphPath;
 import org.opentripplanner.routing.spt.ShortestPathTree;
 import org.opentripplanner.routing.util.ElevationUtils;
@@ -180,6 +180,12 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
      */
     @Setter
     private CustomNamer customNamer;
+    
+    /**
+     * Ignore wheelchair accessibility information.
+     */
+    @Setter
+    private boolean ignoreWheelchairAccessibility = false;
 
     /**
      * Allows for alternate PlainStreetEdge implementations; this is intended for users who want to provide more info in PSE than OTP normally keeps
@@ -844,8 +850,8 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
         private void processBikeRentalNodes() {
             LOG.info("Processing bike rental nodes...");
             int n = 0;
-            BikeRentalStationService bikeRentalService = new BikeRentalStationService();
-            graph.putService(BikeRentalStationService.class, bikeRentalService);
+            BikeRentalStationService bikeRentalService = graph.getService(
+                    BikeRentalStationService.class, true);
             for (OSMNode node : _bikeRentalNodes) {
                 n++;
                 String creativeName = wayPropertySet.getCreativeNameForWay(node);
@@ -868,7 +874,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
                 if (networkSet.isEmpty()) {
                     LOG.warn("Bike rental station at osm node " + node.getId() + " ("
                             + creativeName + ") with no network; including as compatible-with-all.");
-                    networkSet.add("*"); // Special "catch-all" value
+                    networkSet = null; // Special "catch-all" value
                 }
                 BikeRentalStation station = new BikeRentalStation();
                 station.id = "" + node.getId();
@@ -881,7 +887,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
                 station.spacesAvailable = capacity / 2;
                 station.bikesAvailable = capacity - station.spacesAvailable;
                 station.realTimeData = false;
-                bikeRentalService.addStation(station);
+                bikeRentalService.addBikeRentalStation(station);
                 BikeRentalStationVertex stationVertex = new BikeRentalStationVertex(graph, station);
                 new RentABikeOnEdge(stationVertex, stationVertex, networkSet);
                 new RentABikeOffEdge(stationVertex, stationVertex, networkSet);
@@ -2269,7 +2275,7 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
             }
 
             TraverseModeSet modes = new TraverseModeSet(TraverseMode.BICYCLE, TraverseMode.CAR,
-                    TraverseMode.CUSTOM_MOTOR_VEHICLE);
+                    TraverseMode.CUSTOMMOTORVEHICLE);
             String exceptModes = relation.getTag("except");
             if (exceptModes != null) {
                 for (String m : exceptModes.split(";")) {
@@ -2554,7 +2560,8 @@ public class OpenStreetMapGraphBuilderImpl implements GraphBuilder {
                 street.setToll(false);
 
             /* TODO: This should probably generalized somehow? */
-            if (way.isTagFalse("wheelchair") || (steps && !way.isTagTrue("wheelchair"))) {
+            if (!ignoreWheelchairAccessibility
+                    && (way.isTagFalse("wheelchair") || (steps && !way.isTagTrue("wheelchair")))) {
                 street.setWheelchairAccessible(false);
             }
 

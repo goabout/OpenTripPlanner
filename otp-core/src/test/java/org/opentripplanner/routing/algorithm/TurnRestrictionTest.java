@@ -183,7 +183,7 @@ public class TurnRestrictionTest {
 
     @Test
     public void testForwardAsCustomMotorVehicle() {
-        RoutingRequest options = new RoutingRequest(TraverseMode.CUSTOM_MOTOR_VEHICLE);
+        RoutingRequest options = new RoutingRequest(TraverseMode.CUSTOMMOTORVEHICLE);
         options.setCarSpeed(1.0);
 
         options.setRoutingContext(_graph, topRight, bottomLeft);
@@ -239,7 +239,7 @@ public class TurnRestrictionTest {
 
     private void DisallowTurn(PlainStreetEdge from, PlainStreetEdge to) {
         TurnRestrictionType rType = TurnRestrictionType.NO_TURN;
-        TraverseModeSet restrictedModes = new TraverseModeSet(TraverseMode.CAR, TraverseMode.CUSTOM_MOTOR_VEHICLE);
+        TraverseModeSet restrictedModes = new TraverseModeSet(TraverseMode.CAR, TraverseMode.CUSTOMMOTORVEHICLE);
         TurnRestriction restrict = new TurnRestriction(from, to, rType, restrictedModes);
         from.addTurnRestriction(restrict);
     }

@@ -198,7 +198,7 @@ otp.locale.Spanish = {
         RAIL:           "TREN",
         BUS:            "AUTOB\xDAS",
         FERRY:          "BOTE",
-        CABLE_CAR:      "PUENTE COLGANTE",
+        CABLECAR:       "PUENTE COLGANTE",
         GONDOLA:        "GONDOLA",
         FUNICULAR:      "FUNICULAR"
     },

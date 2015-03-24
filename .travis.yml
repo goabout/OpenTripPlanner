@@ -19,4 +19,6 @@ install:
 
 script:
 - mvn -q clean verify
+
+after_success:
 - ./deploy

@@ -45,14 +45,14 @@ public class ParkAndRideEdge extends Edge {
     @Override
     public State traverse(State s0) {
         RoutingRequest request = s0.getOptions();
+        if (!request.parkAndRide) {
+            return null;
+        }
         if (request.isArriveBy()) {
             /*
              * To get back a car, we need to walk and have car mode enabled.
              */
             if (s0.getNonTransitMode() != TraverseMode.WALK) {
-                return null;
-            }
-            if (!request.getModes().getCar()) {
                 return null;
             }
             if (!s0.isCarParked()) {
@@ -63,24 +63,24 @@ public class ParkAndRideEdge extends Edge {
             s1.incrementWeight(time);
             s1.incrementTimeInSeconds(time);
             s1.setCarParked(false);
-            s1.setBackMode(TraverseMode.LEG_SWITCH);
+            s1.setBackMode(TraverseMode.LEGSWITCH);
             return s1.makeState();
         } else {
             /*
              * To park a car, we need to be in one and have allowed walk modes.
              */
-            if (s0.getNonTransitMode() != TraverseMode.CAR)
+            if (s0.getNonTransitMode() != TraverseMode.CAR) {
                 return null;
-            if (!request.getModes().getWalk())
-                return null;
-            if (s0.isCarParked())
+            }
+            if (s0.isCarParked()) {
                 throw new IllegalStateException("Can't drive 2 cars");
+            }
             StateEditor s1 = s0.edit(this);
             int time = request.getCarDropoffTime();
             s1.incrementWeight(time);
             s1.incrementTimeInSeconds(time);
             s1.setCarParked(true);
-            s1.setBackMode(TraverseMode.LEG_SWITCH);
+            s1.setBackMode(TraverseMode.LEGSWITCH);
             return s1.makeState();
         }
     }

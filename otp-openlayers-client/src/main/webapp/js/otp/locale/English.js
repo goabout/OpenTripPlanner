@@ -196,7 +196,7 @@ otp.locale.English = {
         RAIL:           "Rail",
         BUS:            "Bus",
         FERRY:          "Ferry",
-        CABLE_CAR:      "Cable Car",
+        CABLECAR:       "Cable Car",
         GONDOLA:        "Gondola",
         FUNICULAR:      "Funicular"
     },
@@ -389,12 +389,19 @@ otp.locale.English = {
             ['TRAINISH,WALK', 'Train only'],
             ['WALK', 'Walk only'],
             ['BICYCLE', 'Bicycle only'],
-            ['WALK,BICYCLE', 'Rented Bicycle'],
+            ['BICYCLE_RENT,WALK', 'Rented Bicycle'],
+            ['BICYCLE_RENT,WALK;BICYCLE_RENT', 'Rented Bicycle to destination'],
             ['TRANSIT,BICYCLE', 'Transit & Bicycle'],
-            ['TRANSIT,WALK,BICYCLE', 'Transit & Rented Bicycle'],
-            ['WALK,CAR', 'P+R & Walk'],
-            ['TRANSIT,WALK,CAR', 'P+R & Transit'],
-            ['WALK,CAR,BICYCLE', 'P+R & Rented Bicycle']
+            ['BICYCLE_RENT,TRANSIT,WALK', 'Transit & Rented Bicycle'],
+            ['BICYCLE_RENT,TRANSIT,WALK;BICYCLE_RENT', 'Transit & Rented Bicycle to destination'],
+            ['CAR_PARK,WALK', 'P+R & Walk'],
+            ['CAR_PARK,TRANSIT,WALK', 'P+R & Transit'],
+            ['CAR_PARK,WALK,BICYCLE', 'P+R & Rented Bicycle'],
+            ['BICYCLE_PARK,WALK', 'Bike P+R & Walk'],
+            ['BICYCLE_PARK,WALK,TRANSIT', 'Bike P+R & Transit'],
+            ['BICYCLE_PARK_RENT,WALK', 'Bike P+R & Rented bicycle & Walk'],
+            ['BICYCLE_PARK_RENT,WALK;BICYCLE_RENT', 'Bike P+R & Rented bicycle to destination'],
+            ['BICYCLE_PARK_RENT,WALK,TRANSIT;BICYCLE_RENT', 'Bike P+R & Transit & Rented bicycle to destination']
         ],
 
         wheelchair :

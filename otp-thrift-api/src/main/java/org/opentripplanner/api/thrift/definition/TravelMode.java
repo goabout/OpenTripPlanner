@@ -15,7 +15,7 @@ public enum TravelMode implements org.apache.thrift.TEnum {
   BICYCLE(0),
   WALK(1),
   CAR(2),
-  CUSTOM_MOTOR_VEHICLE(3),
+  CUSTOMMOTORVEHICLE(3),
   TRAM(4),
   SUBWAY(5),
   RAIL(6),
@@ -48,7 +48,7 @@ public enum TravelMode implements org.apache.thrift.TEnum {
       case 2:
         return CAR;
       case 3:
-        return CUSTOM_MOTOR_VEHICLE;
+        return CUSTOMMOTORVEHICLE;
       case 4:
         return TRAM;
       case 5:

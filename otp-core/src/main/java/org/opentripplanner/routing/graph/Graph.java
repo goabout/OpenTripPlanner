@@ -55,7 +55,9 @@ import org.opentripplanner.common.IterableLibrary;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.gbannotation.GraphBuilderAnnotation;
 import org.opentripplanner.gbannotation.NoFutureDates;
+import org.opentripplanner.graph_builder.impl.EmbeddedConfigGraphBuilderImpl;
 import org.opentripplanner.model.GraphBundle;
+import org.opentripplanner.routing.alertpatch.AlertPatch;
 import org.opentripplanner.routing.core.MortonVertexComparatorFactory;
 import org.opentripplanner.routing.core.TransferTable;
 import org.opentripplanner.routing.edgetype.PlainStreetEdge;
@@ -77,6 +79,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.vividsolutions.jts.geom.Envelope;
+import lombok.Getter;
 
 /**
  * A graph is really just one or more indexes into a set of vertexes. It used to keep edgelists for each vertex, but those are in the vertex now.
@@ -88,10 +91,17 @@ public class Graph implements Serializable {
     private final MavenVersion mavenVersion = MavenVersion.VERSION;
 
     private static final Logger LOG = LoggerFactory.getLogger(Graph.class);
+    
+    @Setter @Getter
+    private String routerId;
+
+    private final Map<Edge, Set<AlertPatch>> alertPatches = new HashMap<Edge, Set<AlertPatch>>(0);
 
     // transit feed validity information in seconds since epoch
+    @Getter
     private long transitServiceStarts = Long.MAX_VALUE;
 
+    @Getter
     private long transitServiceEnds = 0;
 
     private Map<Class<?>, Object> _services = new HashMap<Class<?>, Object>();
@@ -262,6 +272,65 @@ public class Graph implements Serializable {
     }
 
     /**
+     * Add an {@link AlertPatch} to the {@link AlertPatch} {@link Set} belonging to an {@link Edge}.
+     * @param edge
+     * @param alertPatch
+     */
+    public void addAlertPatch(Edge edge, AlertPatch alertPatch) {
+        if (edge == null || alertPatch == null) return;
+        synchronized (alertPatches) {
+            Set<AlertPatch> alertPatches = this.alertPatches.get(edge);
+            if (alertPatches == null) {
+                this.alertPatches.put(edge, Collections.singleton(alertPatch));
+            } else if (alertPatches instanceof HashSet) {
+                alertPatches.add(alertPatch);
+            } else {
+                alertPatches = new HashSet<AlertPatch>(alertPatches);
+                if (alertPatches.add(alertPatch)) {
+                    this.alertPatches.put(edge, alertPatches);
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove an {@link AlertPatch} from the {@link AlertPatch} {@link Set} belonging to an
+     * {@link Edge}.
+     * @param edge
+     * @param alertPatch
+     */
+    public void removeAlertPatch(Edge edge, AlertPatch alertPatch) {
+        if (edge == null || alertPatch == null) return;
+        synchronized (alertPatches) {
+            Set<AlertPatch> alertPatches = this.alertPatches.get(edge);
+            if (alertPatches != null && alertPatches.contains(alertPatch)) {
+                if (alertPatches.size() < 2) {
+                    this.alertPatches.remove(edge);
+                } else {
+                    alertPatches.remove(alertPatch);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the {@link AlertPatch} {@link Set} that belongs to an {@link Edge} and build a new array.
+     * @param edge
+     * @return The {@link AlertPatch} array that belongs to the {@link Edge}
+     */
+    public AlertPatch[] getAlertPatches(Edge edge) {
+        if (edge != null) {
+            synchronized (alertPatches) {
+                Set<AlertPatch> alertPatches = this.alertPatches.get(edge);
+                if (alertPatches != null) {
+                    return alertPatches.toArray(new AlertPatch[alertPatches.size()]);
+                }
+            }
+        }
+        return new AlertPatch[0];
+    }
+
+    /**
      * Return only the StreetEdges in the graph.
      * @return
      */
@@ -291,7 +360,7 @@ public class Graph implements Serializable {
     public <T> T getService(Class<T> serviceType, boolean autoCreate) {
         @SuppressWarnings("unchecked")
         T t = (T) _services.get(serviceType);
-        if (t == null) {
+        if (t == null && autoCreate) {
             try {
                 t = (T)serviceType.newInstance();
             } catch (InstantiationException e) {

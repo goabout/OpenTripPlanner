@@ -13,13 +13,17 @@
 
 package org.opentripplanner.routing.core;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.Trip;
+import org.opentripplanner.routing.alertpatch.Alert;
 import org.opentripplanner.routing.algorithm.NegativeWeightException;
 import org.opentripplanner.routing.automata.AutomatonState;
 import org.opentripplanner.routing.edgetype.OnboardEdge;
@@ -30,13 +34,15 @@ import org.opentripplanner.routing.edgetype.TransitBoardAlight;
 import org.opentripplanner.routing.edgetype.TripPattern;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Vertex;
-import org.opentripplanner.routing.patch.Alert;
 import org.opentripplanner.routing.pathparser.PathParser;
 import org.opentripplanner.routing.trippattern.TripTimes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class State implements Cloneable {
+
+    private static boolean ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES = false;
+
     /* Data which is likely to change at most traversals */
     
     // the current time at this state, in milliseconds
@@ -78,6 +84,7 @@ public class State implements Cloneable {
      */
     public State(RoutingRequest opt) {
         this(opt.rctx.origin, opt.rctx.originBackEdge, opt.getSecondsSinceEpoch(), opt);
+        checkSingleState(opt.rctx.origin, opt.rctx.originBackEdge, opt.getSecondsSinceEpoch(), opt);
     }
 
     /**
@@ -86,7 +93,8 @@ public class State implements Cloneable {
      */
     public State(Vertex vertex, RoutingRequest opt) {
         // Since you explicitly specify, the vertex, we don't set the backEdge.
-        this(vertex, opt.getSecondsSinceEpoch(), opt);
+        this(vertex, null, opt.getSecondsSinceEpoch(), opt);
+        checkSingleState(vertex, null, opt.getSecondsSinceEpoch(), opt);
     }
 
     /**
@@ -96,13 +104,41 @@ public class State implements Cloneable {
     public State(Vertex vertex, long timeSeconds, RoutingRequest options) {
         // Since you explicitly specify, the vertex, we don't set the backEdge.
         this(vertex, null, timeSeconds, options);
+        checkSingleState(vertex, null, timeSeconds, options);
+    }
+
+    /**
+     * Create a collection of all initial states corresponding to this options.
+     * Since several non-compatible states can be at the begining or the end of a journey,
+     * the search should be seeded with multiple states.
+     */
+    public static Collection<State> buildStates(RoutingRequest options) {
+        return buildStates(options.rctx.origin, options.rctx.originBackEdge,
+                options.getSecondsSinceEpoch(), options);
+    }
+
+    /**
+     * Same method as buildStates, specifying the initial vertex.
+     */
+    public static Collection<State> buildStates(Vertex vertex, RoutingRequest options) {
+        return buildStates(vertex, null, options.getSecondsSinceEpoch(), options);
+    }
+
+    /**
+     * Check if you are allowed to build a single state from this options (ie no multiple states would be returned).
+     */
+    private static void checkSingleState(Vertex vertex, Edge backEdge, long timeSeconds, RoutingRequest options) {
+        Collection<State> states = buildStates(vertex, backEdge, timeSeconds, options);
+        if (states.size() != 1) {
+            throw new IllegalArgumentException(
+                    "Illegal construction of states: the option you gave correspond to multiple initial states. Please use the factory instead.");
+        }
     }
     
     /**
-     * Create an initial state, forcing vertex, back edge and time to the specified values. Useful for reusing 
-     * a RoutingContext in TransitIndex, tests, etc.
+     * Create an initial state, forcing vertex, back edge and time to the specified values.
      */
-    public State(Vertex vertex, Edge backEdge, long timeSeconds, RoutingRequest options) {
+    private State(Vertex vertex, Edge backEdge, long timeSeconds, RoutingRequest options) {
         this.weight = 0;
         this.vertex = vertex;
         this.backEdge = backEdge;
@@ -112,12 +148,24 @@ public class State implements Cloneable {
         // this should be harmless since reversed clones are only used when routing has finished
         this.stateData.opt = options;
         this.stateData.startTime = timeSeconds;
+        /* If the itinerary is to begin with a car that is left for transit, the initial state of arriveBy searches is
+        with the car already "parked" and in WALK mode. Otherwise, we are in CAR mode and "unparked". */
+        if (options.parkAndRide || options.kissAndRide) {
+            this.stateData.carParked = options.isArriveBy();
+            this.stateData.nonTransitMode = this.stateData.carParked ? TraverseMode.WALK : TraverseMode.CAR;
+        }
+        if (options.bikeParkAndRide) {
+            /* Another state is possible (depart walking or arriving with own bike). */
+            this.stateData.bikeParked = options.isArriveBy();
+            this.stateData.nonTransitMode = this.stateData.bikeParked ? TraverseMode.WALK
+                    : TraverseMode.BICYCLE;
+        }
         this.stateData.usingRentedBike = false;
-        boolean parkAndRideEnabled = options.getModes().getCar() && options.getModes().getWalk();
-        this.stateData.carParked = options.isArriveBy() && parkAndRideEnabled;
-        if (parkAndRideEnabled) {
-            this.stateData.nonTransitMode = this.stateData.carParked ? TraverseMode.WALK
-                    : TraverseMode.CAR;
+        if (options.allowBikeRental && options.endRentingBike && options.isArriveBy()) {
+            /* In arrive by mode, another state is possible (not renting and walking). */
+            this.stateData.usingRentedBike = true;
+            // Used rental network set is null (catch-all) by default.
+            this.stateData.nonTransitMode = TraverseMode.BICYCLE;
         }
         this.walkDistance = 0;
         this.time = timeSeconds * 1000;
@@ -126,6 +174,48 @@ public class State implements Cloneable {
             Arrays.fill(this.pathParserStates, AutomatonState.START);
         }
         stateData.routeSequence = new AgencyAndId[0];
+    }
+    
+    private static Collection<State> buildStates(Vertex vertex, Edge backEdge, long timeSeconds,
+            RoutingRequest options) {
+        List<State> states = new ArrayList<State>(4);
+        State state0 = new State(vertex, backEdge, timeSeconds, options);
+        states.add(state0);
+        if (options.bikeParkAndRide && ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES) {
+            if (options.arriveBy) {
+                /*
+                 * This state represent the alternative where the shortest path make you bike until
+                 * the end, thus no P+R.
+                 */
+                State alternate = new State(vertex, backEdge, timeSeconds, options);
+                alternate.stateData.bikeParked = false;
+                alternate.stateData.usingRentedBike = false;
+                alternate.stateData.nonTransitMode = TraverseMode.BICYCLE;
+                states.add(alternate);
+            } else {
+                /*
+                 * This state represent the alternative where the shortest path make you walk to the
+                 * first station, thus no need to start with your bike. We consider the bike parked
+                 * at home.
+                 */
+                State alternate = new State(vertex, backEdge, timeSeconds, options);
+                alternate.stateData.bikeParked = true;
+                alternate.stateData.nonTransitMode = TraverseMode.WALK;
+                states.add(alternate);
+            }
+        }
+        if (options.allowBikeRental && options.endRentingBike && options.arriveBy
+                && ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES) {
+            /*
+             * This state represent the alternative where the shortest path make you walk from the
+             * last transit stop to your destination (this is quite often the optimal solution).
+             */
+            State alternate = new State(vertex, backEdge, timeSeconds, options);
+            alternate.stateData.usingRentedBike = false;
+            alternate.stateData.nonTransitMode = TraverseMode.WALK;
+            states.add(alternate);
+        }
+        return states;
     }
 
     /**
@@ -245,9 +335,6 @@ public class State implements Cloneable {
         return stateData.numBoardings;
     }
 
-    public boolean isAlightedLocal() {
-        return stateData.alightedLocal;
-    }
 
     /**
      * Whether this path has ever previously boarded (or alighted from, in a reverse search) a
@@ -264,17 +351,50 @@ public class State implements Cloneable {
     public boolean isCarParked() {
         return stateData.carParked;
     }
+    
+    public boolean isBikeParked() {
+        return stateData.bikeParked;
+    }
 
     /**
      * @return True if the state at vertex can be the end of path.
      */
     public boolean isFinal() {
-        boolean parkAndRide = stateData.opt.getModes().getCar()
-                && stateData.opt.getModes().getWalk();
-        if (stateData.opt.isArriveBy())
-            return !isBikeRenting() && !(parkAndRide && isCarParked());
-        else
-            return !isBikeRenting() && !(parkAndRide && !isCarParked());
+        // When drive-to-transit is enabled, we need to check whether the car has been parked (or whether it has been picked up in reverse).
+        boolean checkPark = stateData.opt.parkAndRide || stateData.opt.kissAndRide;
+        boolean bikeParkAndRide = stateData.opt.bikeParkAndRide;
+        boolean bikeRental = stateData.opt.allowBikeRental;
+        boolean endRentingBike = stateData.opt.endRentingBike;
+        boolean bikeParkAndRideOk = true;
+        boolean carParkAndRideOk = true;
+        boolean bikeRentalOk = true;
+        if (stateData.opt.isArriveBy()) {
+            if (bikeParkAndRide)
+                bikeParkAndRideOk = !isBikeParked();
+            if (checkPark)
+                carParkAndRideOk = !isCarParked();
+            if (bikeRental) {
+                bikeRentalOk = !isBikeRenting();
+            }
+        } else {
+            if (bikeParkAndRide) {
+                if (ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES) {
+                    // Allow the user to finish with his own bike w/o parking
+                } else {
+                    // Force user to finish with his bike parked in bike P+R
+                    bikeParkAndRideOk = isBikeParked();
+                }
+            }
+            if (checkPark)
+                carParkAndRideOk = isCarParked();
+            // In end renting mode, the end condition is either renting or not,
+            // to allow for short walk segments at the end when walking from the
+            // end station to the destination is better/faster.
+            if (bikeRental)
+                bikeRentalOk = endRentingBike ? (ENABLE_BIKE_PARK_AND_RIDE_MULTISTATES ? true
+                        : isBikeRenting()) : !isBikeRenting();
+        }
+        return bikeRentalOk && bikeParkAndRideOk && carParkAndRideOk;
     }
 
     public Stop getPreviousStop() {
@@ -311,12 +431,22 @@ public class State implements Cloneable {
             return false;
         if (isCarParked() != other.isCarParked())
             return false;
+        if (isBikeParked() != other.isBikeParked())
+            return false;
 
         if (backEdge != other.getBackEdge() && ((backEdge instanceof PlainStreetEdge)
                 && (!((PlainStreetEdge) backEdge).getTurnRestrictions().isEmpty())))
             return false;
 
+        if (!getOptions().getModes().isTransit()) {
+            // No time-dependant routing, only use generalized cost
+            return this.weight <= other.weight;
+        }
+
         if (this.routeSequenceSubset(other)) {
+            // TODO Condition on weight *and* time greatly
+            // increase the number of states per vertex.
+            // Relax this condition
             return this.weight <= other.weight &&
                     other.getElapsedTimeSeconds() >= this.getElapsedTimeSeconds();
         }
@@ -488,12 +618,13 @@ public class State implements Cloneable {
     public State reversedClone() {
         // We no longer compensate for schedule slack (minTransferTime) here.
         // It is distributed symmetrically over all preboard and prealight edges.
-        State newState = new State(this.vertex, getTimeSeconds(), stateData.opt.reversedClone());
+        State newState = new State(this.vertex, null, getTimeSeconds(), stateData.opt.reversedClone());
         newState.stateData.tripTimes = stateData.tripTimes;
         newState.stateData.initialWaitTime = stateData.initialWaitTime;
-        // TODO Check if those two lines are needed:
         newState.stateData.usingRentedBike = stateData.usingRentedBike;
         newState.stateData.carParked = stateData.carParked;
+        newState.stateData.bikeParked = stateData.bikeParked;
+        newState.stateData.nonTransitMode = stateData.nonTransitMode;
         return newState;
     }
 
@@ -706,9 +837,9 @@ public class State implements Cloneable {
 
                     ret = ((TransitBoardAlight) edge).traverse(ret, orig.getBackState().getTimeSeconds());
                     newInitialWaitTime = ret.stateData.initialWaitTime;
-                }
-                else                   
+                } else {
                     ret = edge.traverse(ret);
+                }
 
                 if (ret == null) {
                     LOG.warn("Cannot reverse path at edge: " + edge +
@@ -743,6 +874,8 @@ public class State implements Cloneable {
                     editor.setBikeRenting(!orig.isBikeRenting());
                 if (orig.isCarParked() != orig.getBackState().isCarParked())
                     editor.setCarParked(!orig.isCarParked());
+                if (orig.isBikeParked() != orig.getBackState().isBikeParked())
+                    editor.setBikeParked(!orig.isBikeParked());
 
                 editor.setNumBoardings(getNumBoardings() - orig.getNumBoardings());
 

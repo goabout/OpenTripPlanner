@@ -46,8 +46,8 @@ public class DefaultRemainingWeightHeuristic implements RemainingWeightHeuristic
     private double targetY;
 
     @Override
-    public void initialize(State s, Vertex target, long abortTime) {
-        this.options = s.getOptions();
+    public void initialize(RoutingRequest options, Vertex origin, Vertex target, long abortTime) {
+        this.options = options;
         this.useTransit = options.getModes().isTransit();
         this.maxSpeed = getMaxSpeed(options);
 
@@ -77,12 +77,7 @@ public class DefaultRemainingWeightHeuristic implements RemainingWeightHeuristic
                 targetX);
         if (useTransit) {
             double streetSpeed = options.getStreetSpeedUpperBound();
-            if (s.isAlightedLocal() || euclideanDistance < target.getDistanceToNearestTransitStop()) { 
-                // Search allows using transit, passenger is alighted local or within mandatory 
-                // walking distance of the target. We will not reach the target via transit.
-                if (euclideanDistance + s.getWalkDistance() > options.getMaxWalkDistance()) {
-                    return -1; // impossible to reach destination
-                }
+            if (euclideanDistance < target.getDistanceToNearestTransitStop()) { 
                 return options.walkReluctance * euclideanDistance / streetSpeed;
             }
             // Search allows using transit, passenger is not alighted local and is not within 
@@ -148,7 +143,11 @@ public class DefaultRemainingWeightHeuristic implements RemainingWeightHeuristic
             } else {
                 // assume that the best route is no more than 10 times better than
                 // the as-the-crow-flies flat base route.
-                return options.getStreetSpeedUpperBound() * 10;
+                // TODO Check this magic multiplier. 10 is a killer in term of
+                // performance, and for bike/walk mode does not seems to be
+                // necessary (safest street would never be 10 times longer than
+                // the shortest one?).
+                return options.getStreetSpeedUpperBound();
             }
         }
     }

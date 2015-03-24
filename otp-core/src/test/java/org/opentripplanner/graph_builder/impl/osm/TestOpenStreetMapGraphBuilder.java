@@ -151,16 +151,16 @@ public class TestOpenStreetMapGraphBuilder extends TestCase {
             
             StreetTraversalPermission perm = se.getPermission();
             
-            // CAR and CUSTOM_MOTOR_VEHICLE should always have the same permissions.
+            // CAR and CUSTOMMOTORVEHICLE should always have the same permissions.
             assertEquals(perm.allows(StreetTraversalPermission.CAR),
-                    perm.allows(StreetTraversalPermission.CUSTOM_MOTOR_VEHICLE));
+                    perm.allows(StreetTraversalPermission.CUSTOMMOTORVEHICLE));
 
             // Check turn restriction consistency.
             // NOTE(flamholz): currently there don't appear to be any turn restrictions
             // in the OSM file we are loading.
             for (TurnRestriction tr : se.getTurnRestrictions()) {                
                 // All turn restrictions should apply equally to
-                // CAR and CUSTOM_MOTOR_VEHICLE.
+                // CAR and CUSTOMMOTORVEHICLE.
                 TraverseModeSet modes = tr.modes;
                 assertEquals(modes.getCar(), modes.getCustomMotorVehicle());
             }

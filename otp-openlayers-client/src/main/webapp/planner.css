@@ -672,7 +672,7 @@ background-image: url(images/ui/trip/start_RTL.png)!important;
 .commuter-icon,.rail-icon,.commrail-icon,.trainish-icon {background-image:url(images/ui/trip/mode/rail.png) !important;float:left;width:21px!important;height:21px!important;}
 .funicular-icon,.gondola-icon {background-image:url(images/ui/trip/mode/gondola.png) !important;float:left;width:21px!important;height:21px!important;}
 .tram-icon,.streetcar-icon {background-image:url(images/ui/trip/mode/tram.png) !important;float:left;width:21px!important;height:21px!important;}
-.cable_car-icon,.trolley-icon,{background-image:url(images/ui/trip/mode/trolly.png) !important;float:left;width:21px!important;height:21px!important;}
+.cablecar-icon,.trolley-icon,{background-image:url(images/ui/trip/mode/trolly.png) !important;float:left;width:21px!important;height:21px!important;}
 .walk-icon {background-image:url(images/ui/trip/mode/walk.png) !important;float:left;width:21px!important;height:21px!important;}
 .bike-icon,.bicycle-icon {background-image:url(images/ui/trip/mode/bike.png) !important;float:left;width:21px!important;height:21px!important;}
 .plane-icon{background-image:url(images/ui/trip/mode/plane.png) !important;float:left;width:21px!important;height:21px!important;}
@@ -724,7 +724,7 @@ float: left;
 [dir=rtl] .commuter-icon, [dir=rtl] .rail-icon, [dir=rtl] .commrail-icon, [dir=rtl] .trainish-icon,
 [dir=rtl] .funicular-icon, [dir=rtl] .gondola-icon,
 [dir=rtl] .tram-icon, [dir=rtl] .streetcar-icon,
-[dir=rtl] .cable_car-icon,[dir=rtl] .trolley-icon,
+[dir=rtl] .cablecar-icon,[dir=rtl] .trolley-icon,
 [dir=rtl] .walk-icon,
 [dir=rtl] .bike-icon, [dir=rtl] .bicycle-icon,
 [dir=rtl] .plane-icon, 
