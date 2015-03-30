@@ -57,6 +57,7 @@ public class QualifiedModeSetSequence {
                 if (qMode.mode == TraverseMode.BICYCLE) {
                     if (qMode.qualifiers.contains(Qualifier.RENT)) {
                         req.allowBikeRental = true;
+                        req.startRentingBike = qMode.qualifiers.contains(Qualifier.HAVE);
                     }
                     if (qMode.qualifiers.contains(Qualifier.PARK)) {
                         req.bikeParkAndRide = true;

@@ -161,6 +161,12 @@ public class State implements Cloneable {
                     : TraverseMode.BICYCLE;
         }
         this.stateData.usingRentedBike = false;
+        if (options.allowBikeRental && options.startRentingBike && !options.isArriveBy()) {
+            /* Depart at mode, starting with a rented-bike. */
+            this.stateData.usingRentedBike = true;
+            // Used rental network set is null (catch-all) by default.
+            this.stateData.nonTransitMode = TraverseMode.BICYCLE;
+        }
         if (options.allowBikeRental && options.endRentingBike && options.isArriveBy()) {
             /* In arrive by mode, another state is possible (not renting and walking). */
             this.stateData.usingRentedBike = true;
@@ -364,6 +370,7 @@ public class State implements Cloneable {
         boolean checkPark = stateData.opt.parkAndRide || stateData.opt.kissAndRide;
         boolean bikeParkAndRide = stateData.opt.bikeParkAndRide;
         boolean bikeRental = stateData.opt.allowBikeRental;
+        boolean startRentingBike = stateData.opt.startRentingBike;
         boolean endRentingBike = stateData.opt.endRentingBike;
         boolean bikeParkAndRideOk = true;
         boolean carParkAndRideOk = true;
@@ -374,7 +381,7 @@ public class State implements Cloneable {
             if (checkPark)
                 carParkAndRideOk = !isCarParked();
             if (bikeRental) {
-                bikeRentalOk = !isBikeRenting();
+                bikeRentalOk = startRentingBike ? isBikeRenting() : !isBikeRenting();
             }
         } else {
             if (bikeParkAndRide) {

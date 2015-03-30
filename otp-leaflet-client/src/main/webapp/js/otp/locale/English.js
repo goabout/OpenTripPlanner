@@ -476,7 +476,10 @@ otp.locale.English = {
             "BICYCLE_PARK,WALK,TRANSIT"                   : "Bike P+R & Transit",
             "BICYCLE_PARK_RENT,WALK"                      : "Bike P+R & Rented bicycle & Walk",
             "BICYCLE_PARK_RENT,WALK;BICYCLE_RENT"         : "Bike P+R & Rented bicycle to destination",
-            "BICYCLE_PARK_RENT,WALK,TRANSIT;BICYCLE_RENT" : "Bike P+R & Transit & Rented bicycle to destination"
+            "BICYCLE_PARK_RENT,WALK,TRANSIT;BICYCLE_RENT" : "Bike P+R & Transit & Rented bicycle to destination",
+            "BICYCLE_HAVE_RENT,WALK"                      : "Rented bicycle from origin & Walk",
+            "BICYCLE_HAVE_RENT,WALK,TRANSIT"              : "Rented bicycle from origin & Transit",
+            "BICYCLE_HAVE_RENT,WALK,TRANSIT;BICYCLE_RENT" : "Transit & Rented bicycle from origin and to destination"
         },
 
         wheelchair :
