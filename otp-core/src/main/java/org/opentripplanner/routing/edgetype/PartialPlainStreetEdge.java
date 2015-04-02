@@ -19,9 +19,6 @@ import org.opentripplanner.routing.vertextype.StreetVertex;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
 
-import lombok.Getter;
-import lombok.Setter;
-
 /**
  * Represents a sub-segment of a StreetEdge.
  * 
@@ -34,8 +31,6 @@ public class PartialPlainStreetEdge extends PlainStreetEdge {
     /**
      * The edge on which this lies.
      */
-    @Setter
-    @Getter
     private StreetEdge parentEdge;
 
     public PartialPlainStreetEdge(StreetEdge parentEdge, StreetVertex v1, StreetVertex v2,
@@ -88,7 +83,7 @@ public class PartialPlainStreetEdge extends PlainStreetEdge {
     public boolean isReverseOf(Edge e) {
         Edge other = e;
         if (e instanceof PartialPlainStreetEdge) {
-            other = ((PartialPlainStreetEdge) e).getParentEdge();
+            other = ((PartialPlainStreetEdge) e).parentEdge;
         }
         
         // TODO(flamholz): is there a case where a partial edge has a reverse of its own?
