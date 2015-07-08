@@ -216,10 +216,6 @@ public class PlanGenerator {
      * @return The generated itinerary
      */
     Itinerary generateItinerary(GraphPath path, boolean showIntermediateStops) {
-        if (path.states.size() < 2) {
-            throw new TrivialPathException();
-        }
-
         Itinerary itinerary = new Itinerary();
 
         State[] states = new State[path.states.size()];
@@ -307,6 +303,21 @@ public class PlanGenerator {
      * @return An array of arrays of states belonging to a single leg (i.e. a two-dimensional array)
      */
     private State[][] sliceStates(State[] states) {
+        boolean trivial = true;
+
+        for (State state : states) {
+            TraverseMode traverseMode = state.getBackMode();
+
+            if (traverseMode != null && traverseMode != TraverseMode.LEGSWITCH) {
+                trivial = false;
+                break;
+            }
+        }
+
+        if (trivial) {
+            throw new TrivialPathException();
+        }
+
         int[] legIndexPairs = {0, states.length - 1};
         List<int[]> legsIndexes = new ArrayList<int[]>();
 
